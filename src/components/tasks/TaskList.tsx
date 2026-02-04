@@ -17,7 +17,18 @@ export function TaskList() {
   const [editTarget, setEditTarget] = useState<Task | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
   const [filterStatus, setFilterStatus] = useState<TaskStatus | 'all'>('all');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
   const [viewMode, setViewMode] = useViewMode('tasks', 'list');
+
+  // 自社系カテゴリかどうかを判定
+  const isSelfCategory = (name: string) => {
+    const selfPatterns = ['自社', 'demo/', 'Demo/', 'Pro/', 'その他/', '未分類'];
+    return selfPatterns.some(pattern => name.includes(pattern) || name.toLowerCase().startsWith(pattern.toLowerCase()));
+  };
+
+  // 自社カテゴリと顧客を分離
+  const selfCategories = customers.filter(c => isSelfCategory(c.name));
+  const realCustomers = customers.filter(c => !isSelfCategory(c.name) && c.name !== '自社開発');
 
   // 顧客IDからprojectIdを取得（なければ作成）
   const getOrCreateProjectForCustomer = async (customerId?: string): Promise<string> => {
@@ -79,11 +90,18 @@ export function TaskList() {
     }
   };
 
-  // 顧客名を取得
-  const getCustomerName = (task: Task) => {
+  // 顧客IDを取得
+  const getCustomerId = (task: Task) => {
     const project = projects.find(p => p.id === task.projectId);
     if (!project || project.name === '自社開発タスク') return null;
-    return customers.find(c => c.id === project.customerId)?.name;
+    return project.customerId;
+  };
+
+  // 顧客名を取得
+  const getCustomerName = (task: Task) => {
+    const customerId = getCustomerId(task);
+    if (!customerId) return null;
+    return customers.find(c => c.id === customerId)?.name;
   };
 
   const getStatusBadgeVariant = (status: TaskStatus) => {
@@ -108,9 +126,32 @@ export function TaskList() {
     }
   };
 
-  const filteredTasks = filterStatus === 'all'
+  // ステータスでフィルタ
+  const statusFilteredTasks = filterStatus === 'all'
     ? tasks
     : tasks.filter((t) => t.status === filterStatus);
+
+  // カテゴリでフィルタ
+  const filteredTasks = filterCategory === 'all'
+    ? statusFilteredTasks
+    : filterCategory === 'customers'
+      ? statusFilteredTasks.filter((t) => {
+          const customerId = getCustomerId(t);
+          if (!customerId) return false;
+          const customer = customers.find(c => c.id === customerId);
+          return customer && !isSelfCategory(customer.name);
+        })
+      : filterCategory === 'internal'
+        ? statusFilteredTasks.filter((t) => {
+            const customerId = getCustomerId(t);
+            if (!customerId) return true; // 自社開発タスク
+            const customer = customers.find(c => c.id === customerId);
+            return customer && isSelfCategory(customer.name);
+          })
+        : statusFilteredTasks.filter((t) => {
+            const customerId = getCustomerId(t);
+            return customerId === filterCategory;
+          });
 
   const sortedTasks = [...filteredTasks].sort((a, b) => {
     const priorityOrder = { high: 0, medium: 1, low: 2 };
@@ -133,20 +174,41 @@ export function TaskList() {
       <div className="flex-1 p-6 overflow-auto">
         {/* フィルター & ビュー切り替え */}
         <div className="flex justify-between items-center mb-4">
-          <div className="flex gap-2">
-            {(['all', 'todo', 'in_progress', 'done'] as const).map((status) => (
-              <button
-                key={status}
-                onClick={() => setFilterStatus(status)}
-                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                  filterStatus === status
-                    ? 'bg-[var(--color-primary)] text-white'
-                    : 'bg-gray-100 text-[var(--color-text-muted)] hover:bg-gray-200'
-                }`}
-              >
-                {status === 'all' ? 'すべて' : TASK_STATUS_LABELS[status]}
-              </button>
-            ))}
+          <div className="flex gap-4 items-center">
+            <div className="flex gap-2">
+              {(['all', 'todo', 'in_progress', 'done'] as const).map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setFilterStatus(status)}
+                  className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                    filterStatus === status
+                      ? 'bg-[var(--color-primary)] text-white'
+                      : 'bg-gray-100 text-[var(--color-text-muted)] hover:bg-gray-200'
+                  }`}
+                >
+                  {status === 'all' ? 'すべて' : TASK_STATUS_LABELS[status]}
+                </button>
+              ))}
+            </div>
+            <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="px-3 py-1.5 text-sm border border-[var(--color-border)] rounded-md bg-white"
+            >
+              <option value="all">全カテゴリ</option>
+              <option value="customers">顧客のみ</option>
+              <option value="internal">自社カテゴリのみ</option>
+              <optgroup label="── 顧客 ──">
+                {realCustomers.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </optgroup>
+              <optgroup label="── 自社カテゴリ ──">
+                {selfCategories.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </optgroup>
+            </select>
           </div>
           <div className="flex border border-[var(--color-border)] rounded-md overflow-hidden">
             <button
