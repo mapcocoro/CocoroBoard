@@ -34,6 +34,9 @@ export function TaskForm({ task, projectId, onSubmit, onCancel }: TaskFormProps)
     status: 'todo' as TaskStatus,
     priority: 'medium' as TaskPriority,
     dueDate: '',
+    folderPath: '',
+    stagingUrl: '',
+    productionUrl: '',
   });
 
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
@@ -58,6 +61,9 @@ export function TaskForm({ task, projectId, onSubmit, onCancel }: TaskFormProps)
         status: task.status,
         priority: task.priority,
         dueDate: task.dueDate || '',
+        folderPath: task.folderPath || '',
+        stagingUrl: task.stagingUrl || '',
+        productionUrl: task.productionUrl || '',
       });
       const customerId = getCustomerIdFromTask(task);
       if (customerId) {
@@ -143,6 +149,26 @@ export function TaskForm({ task, projectId, onSubmit, onCancel }: TaskFormProps)
         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
         placeholder="タスクの詳細・メモ"
       />
+      <Input
+        label="格納場所"
+        value={formData.folderPath}
+        onChange={(e) => setFormData({ ...formData, folderPath: e.target.value })}
+        placeholder="/path/to/folder"
+      />
+      <div className="grid grid-cols-2 gap-4">
+        <Input
+          label="検証URL"
+          value={formData.stagingUrl}
+          onChange={(e) => setFormData({ ...formData, stagingUrl: e.target.value })}
+          placeholder="https://staging.example.com"
+        />
+        <Input
+          label="公開URL"
+          value={formData.productionUrl}
+          onChange={(e) => setFormData({ ...formData, productionUrl: e.target.value })}
+          placeholder="https://example.com"
+        />
+      </div>
       <div className="grid grid-cols-2 gap-4">
         <Select
           label="ステータス"

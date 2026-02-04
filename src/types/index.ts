@@ -83,6 +83,10 @@ export interface Task {
   status: TaskStatus;
   priority: TaskPriority;
   dueDate?: string;
+  // 追加フィールド
+  folderPath?: string;     // 格納場所フォルダパス
+  stagingUrl?: string;     // 検証URL
+  productionUrl?: string;  // 公開URL
   activities?: Activity[];  // 活動ログ
   createdAt: string;
   updatedAt: string;

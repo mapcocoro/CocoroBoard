@@ -188,6 +188,42 @@ export function TaskDetail() {
                   <dd className="col-span-2 whitespace-pre-wrap">{task.description}</dd>
                 </>
               )}
+              {task.folderPath && (
+                <>
+                  <dt className="text-[var(--color-text-muted)]">格納場所</dt>
+                  <dd className="col-span-2 font-mono text-xs bg-gray-100 px-2 py-1 rounded">{task.folderPath}</dd>
+                </>
+              )}
+              {task.stagingUrl && (
+                <>
+                  <dt className="text-[var(--color-text-muted)]">検証URL</dt>
+                  <dd>
+                    <a
+                      href={task.stagingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[var(--color-primary)] hover:underline break-all"
+                    >
+                      {task.stagingUrl}
+                    </a>
+                  </dd>
+                </>
+              )}
+              {task.productionUrl && (
+                <>
+                  <dt className="text-[var(--color-text-muted)]">公開URL</dt>
+                  <dd>
+                    <a
+                      href={task.productionUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[var(--color-primary)] hover:underline break-all"
+                    >
+                      {task.productionUrl}
+                    </a>
+                  </dd>
+                </>
+              )}
             </dl>
           </CardBody>
         </Card>

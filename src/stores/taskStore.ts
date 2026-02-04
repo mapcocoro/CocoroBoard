@@ -31,6 +31,9 @@ const fromDb = (row: Record<string, unknown>): Task => ({
   status: row.status as Task['status'],
   priority: row.priority as Task['priority'],
   dueDate: row.due_date as string | undefined,
+  folderPath: row.folder_path as string | undefined,
+  stagingUrl: row.staging_url as string | undefined,
+  productionUrl: row.production_url as string | undefined,
   activities: row.activities as Activity[] | undefined,
   createdAt: row.created_at as string,
   updatedAt: row.updated_at as string,
@@ -46,6 +49,9 @@ const toDb = (task: Partial<Task>) => ({
   ...(task.status !== undefined && { status: task.status }),
   ...(task.priority !== undefined && { priority: task.priority }),
   ...(task.dueDate !== undefined && { due_date: task.dueDate || null }),
+  ...(task.folderPath !== undefined && { folder_path: task.folderPath || null }),
+  ...(task.stagingUrl !== undefined && { staging_url: task.stagingUrl || null }),
+  ...(task.productionUrl !== undefined && { production_url: task.productionUrl || null }),
   ...(task.activities !== undefined && { activities: task.activities || [] }),
 });
 
