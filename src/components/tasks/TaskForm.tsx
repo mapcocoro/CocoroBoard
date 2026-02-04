@@ -13,9 +13,14 @@ interface TaskFormProps {
 
 export function TaskForm({ task, projectId, onSubmit, onCancel }: TaskFormProps) {
   const { projects } = useProjectStore();
+
+  // 「自社開発タスク」を探す（なければ最初のプロジェクト）
+  const defaultProject = projects.find(p => p.name === '自社開発タスク') || projects[0];
+  const defaultProjectId = projectId || defaultProject?.id || '';
+
   const [formData, setFormData] = useState({
     name: '',
-    projectId: projectId || '',
+    projectId: defaultProjectId,
     description: '',
     status: 'todo' as TaskStatus,
     priority: 'medium' as TaskPriority,
@@ -50,34 +55,20 @@ export function TaskForm({ task, projectId, onSubmit, onCancel }: TaskFormProps)
     label,
   }));
 
-  const projectOptions = [
-    { value: '', label: '案件を選択' },
-    ...projects.map((p) => ({ value: p.id, label: p.name })),
-  ];
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <Input
-        label="プロダクト/案件名 *"
+        label="タスク名 *"
         value={formData.name}
         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
         required
-        placeholder="HP作成"
+        placeholder="【開発】〇〇機能追加"
       />
-      {!projectId && (
-        <Select
-          label="案件 *"
-          value={formData.projectId}
-          onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
-          options={projectOptions}
-          required
-        />
-      )}
       <Textarea
-        label="タイトル"
+        label="詳細"
         value={formData.description}
         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-        placeholder="タスクのタイトル・詳細"
+        placeholder="タスクの詳細・メモ"
       />
       <div className="grid grid-cols-2 gap-4">
         <Select

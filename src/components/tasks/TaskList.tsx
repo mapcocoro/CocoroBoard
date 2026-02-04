@@ -1,18 +1,14 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Header } from '../layout/Header';
 import { Button, Modal, Badge, EmptyState, ConfirmDialog, Card, CardBody, useViewMode } from '../common';
 import { TaskForm } from './TaskForm';
-import { useTaskStore, useProjectStore, useCustomerStore } from '../../stores';
+import { useTaskStore } from '../../stores';
 import { TASK_STATUS_LABELS, TASK_PRIORITY_LABELS } from '../../types';
 import type { Task, TaskStatus } from '../../types';
 import { format } from 'date-fns';
 
 export function TaskList() {
-  const navigate = useNavigate();
   const { tasks, addTask, updateTask, deleteTask } = useTaskStore();
-  const { projects } = useProjectStore();
-  const { customers } = useCustomerStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Task | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
@@ -36,24 +32,6 @@ export function TaskList() {
       deleteTask(deleteTarget.id);
       setDeleteTarget(null);
     }
-  };
-
-  const getProject = (projectId: string) => {
-    return projects.find((p) => p.id === projectId);
-  };
-
-  const getProjectName = (projectId: string) => {
-    return getProject(projectId)?.name || '不明';
-  };
-
-  const getCustomerName = (projectId: string) => {
-    const project = getProject(projectId);
-    if (!project) return '不明';
-    return customers.find((c) => c.id === project.customerId)?.name || '不明';
-  };
-
-  const getCustomerId = (projectId: string) => {
-    return getProject(projectId)?.customerId;
   };
 
   const getStatusBadgeVariant = (status: TaskStatus) => {
@@ -178,25 +156,6 @@ export function TaskList() {
                           {task.description}
                         </p>
                       )}
-                      <div className="flex gap-2 mt-1 text-xs">
-                        <button
-                          onClick={() => navigate(`/projects/${task.projectId}`)}
-                          className="text-[var(--color-primary)] hover:underline"
-                        >
-                          {getProjectName(task.projectId)}
-                        </button>
-                        {getCustomerId(task.projectId) && (
-                          <>
-                            <span className="text-[var(--color-text-muted)]">/</span>
-                            <button
-                              onClick={() => navigate(`/customers/${getCustomerId(task.projectId)}`)}
-                              className="text-[var(--color-primary)] hover:underline"
-                            >
-                              {getCustomerName(task.projectId)}
-                            </button>
-                          </>
-                        )}
-                      </div>
                     </div>
                     <div className="flex gap-1">
                       <button
@@ -238,9 +197,7 @@ export function TaskList() {
               <thead>
                 <tr className="border-b border-[var(--color-border)] bg-[var(--color-bg-hover)]">
                   <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)]">ID</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)]">プロダクト/案件名</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)]">案件</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)]">顧客</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)]">タスク名</th>
                   <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)]">ステータス</th>
                   <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)]">優先度</th>
                   <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)]">期限</th>
@@ -258,25 +215,8 @@ export function TaskList() {
                     </td>
                     <td className="px-4 py-3">
                       <p className="font-medium text-sm text-[var(--color-text)]">{task.name}</p>
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      <button
-                        onClick={() => navigate(`/projects/${task.projectId}`)}
-                        className="text-[var(--color-primary)] hover:underline"
-                      >
-                        {getProjectName(task.projectId)}
-                      </button>
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      {getCustomerId(task.projectId) ? (
-                        <button
-                          onClick={() => navigate(`/customers/${getCustomerId(task.projectId)}`)}
-                          className="text-[var(--color-primary)] hover:underline"
-                        >
-                          {getCustomerName(task.projectId)}
-                        </button>
-                      ) : (
-                        <span className="text-[var(--color-text-muted)]">-</span>
+                      {task.description && (
+                        <p className="text-xs text-[var(--color-text-muted)] truncate max-w-xs">{task.description}</p>
                       )}
                     </td>
                     <td className="px-4 py-3">
