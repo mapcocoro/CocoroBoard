@@ -194,10 +194,22 @@ export function TaskDetail() {
                   <dd>{task.domainInfo}</dd>
                 </>
               )}
-              {task.folderPath && (
+              {task.codeFolder && (
                 <>
-                  <dt className="text-[var(--color-text-muted)]">格納場所</dt>
-                  <dd className="col-span-2 font-mono text-xs bg-gray-100 px-2 py-1 rounded">{task.folderPath}</dd>
+                  <dt className="text-[var(--color-text-muted)]">コードフォルダ</dt>
+                  <dd className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{task.codeFolder}</dd>
+                </>
+              )}
+              {task.meetingFolder && (
+                <>
+                  <dt className="text-[var(--color-text-muted)]">打合せフォルダ</dt>
+                  <dd className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{task.meetingFolder}</dd>
+                </>
+              )}
+              {task.contractFolder && (
+                <>
+                  <dt className="text-[var(--color-text-muted)]">契約書フォルダ</dt>
+                  <dd className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{task.contractFolder}</dd>
                 </>
               )}
               {task.stagingUrl && (

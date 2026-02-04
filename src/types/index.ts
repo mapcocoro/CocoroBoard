@@ -84,10 +84,12 @@ export interface Task {
   priority: TaskPriority;
   dueDate?: string;
   // 追加フィールド
-  domainInfo?: string;     // ドメイン情報
-  folderPath?: string;     // 格納場所フォルダパス
-  stagingUrl?: string;     // 検証URL
-  productionUrl?: string;  // 公開URL
+  domainInfo?: string;       // ドメイン情報
+  codeFolder?: string;       // コードフォルダ
+  meetingFolder?: string;    // 打合せフォルダ
+  contractFolder?: string;   // 契約書フォルダ
+  stagingUrl?: string;       // 検証URL
+  productionUrl?: string;    // 公開URL
   activities?: Activity[];  // 活動ログ
   createdAt: string;
   updatedAt: string;

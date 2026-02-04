@@ -35,7 +35,9 @@ export function TaskForm({ task, projectId, onSubmit, onCancel }: TaskFormProps)
     priority: 'medium' as TaskPriority,
     dueDate: '',
     domainInfo: '',
-    folderPath: '',
+    codeFolder: '',
+    meetingFolder: '',
+    contractFolder: '',
     stagingUrl: '',
     productionUrl: '',
   });
@@ -63,7 +65,9 @@ export function TaskForm({ task, projectId, onSubmit, onCancel }: TaskFormProps)
         priority: task.priority,
         dueDate: task.dueDate || '',
         domainInfo: task.domainInfo || '',
-        folderPath: task.folderPath || '',
+        codeFolder: task.codeFolder || '',
+        meetingFolder: task.meetingFolder || '',
+        contractFolder: task.contractFolder || '',
         stagingUrl: task.stagingUrl || '',
         productionUrl: task.productionUrl || '',
       });
@@ -158,11 +162,25 @@ export function TaskForm({ task, projectId, onSubmit, onCancel }: TaskFormProps)
         placeholder="example.com"
       />
       <Input
-        label="格納場所"
-        value={formData.folderPath}
-        onChange={(e) => setFormData({ ...formData, folderPath: e.target.value })}
-        placeholder="/path/to/folder"
+        label="コードフォルダ"
+        value={formData.codeFolder}
+        onChange={(e) => setFormData({ ...formData, codeFolder: e.target.value })}
+        placeholder="/path/to/code"
       />
+      <div className="grid grid-cols-2 gap-4">
+        <Input
+          label="打合せフォルダ"
+          value={formData.meetingFolder}
+          onChange={(e) => setFormData({ ...formData, meetingFolder: e.target.value })}
+          placeholder="/path/to/meeting"
+        />
+        <Input
+          label="契約書フォルダ"
+          value={formData.contractFolder}
+          onChange={(e) => setFormData({ ...formData, contractFolder: e.target.value })}
+          placeholder="/path/to/contract"
+        />
+      </div>
       <div className="grid grid-cols-2 gap-4">
         <Input
           label="検証URL"
