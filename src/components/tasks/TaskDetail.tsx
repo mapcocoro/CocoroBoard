@@ -188,6 +188,12 @@ export function TaskDetail() {
                   <dd className="col-span-2 whitespace-pre-wrap">{task.description}</dd>
                 </>
               )}
+              {task.domainInfo && (
+                <>
+                  <dt className="text-[var(--color-text-muted)]">ドメイン</dt>
+                  <dd>{task.domainInfo}</dd>
+                </>
+              )}
               {task.folderPath && (
                 <>
                   <dt className="text-[var(--color-text-muted)]">格納場所</dt>

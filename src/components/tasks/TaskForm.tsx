@@ -34,6 +34,7 @@ export function TaskForm({ task, projectId, onSubmit, onCancel }: TaskFormProps)
     status: 'todo' as TaskStatus,
     priority: 'medium' as TaskPriority,
     dueDate: '',
+    domainInfo: '',
     folderPath: '',
     stagingUrl: '',
     productionUrl: '',
@@ -61,6 +62,7 @@ export function TaskForm({ task, projectId, onSubmit, onCancel }: TaskFormProps)
         status: task.status,
         priority: task.priority,
         dueDate: task.dueDate || '',
+        domainInfo: task.domainInfo || '',
         folderPath: task.folderPath || '',
         stagingUrl: task.stagingUrl || '',
         productionUrl: task.productionUrl || '',
@@ -148,6 +150,12 @@ export function TaskForm({ task, projectId, onSubmit, onCancel }: TaskFormProps)
         value={formData.description}
         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
         placeholder="タスクの詳細・メモ"
+      />
+      <Input
+        label="ドメイン"
+        value={formData.domainInfo}
+        onChange={(e) => setFormData({ ...formData, domainInfo: e.target.value })}
+        placeholder="example.com"
       />
       <Input
         label="格納場所"
