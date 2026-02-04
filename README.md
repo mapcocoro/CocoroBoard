@@ -2,6 +2,10 @@
 
 個人事業・フリーランス向けの業務管理アプリケーション。顧客、案件、タスク、請求を一元管理できます。
 
+## 公開URL
+
+https://mapcocoro.github.io/CocoroBoard/
+
 ## 概要
 
 NotionやGoogle スプレッドシートで管理していた業務データを、自分専用にカスタマイズされた形で管理するために開発しました。
@@ -17,12 +21,16 @@ NotionやGoogle スプレッドシートで管理していた業務データを�
 
 ## 技術スタック
 
-- **フレームワーク**: React 18 + TypeScript
-- **ビルドツール**: Vite
-- **スタイリング**: Tailwind CSS
-- **状態管理**: Zustand
-- **ルーティング**: React Router
-- **日付処理**: date-fns
+| カテゴリ | 技術 |
+|---------|------|
+| フレームワーク | React 18 + TypeScript |
+| ビルドツール | Vite |
+| スタイリング | Tailwind CSS |
+| 状態管理 | Zustand |
+| ルーティング | React Router |
+| データベース | **Supabase (PostgreSQL)** |
+| ホスティング | GitHub Pages |
+| 日付処理 | date-fns |
 
 ## セットアップ
 
@@ -42,77 +50,68 @@ npm run preview
 
 ## データ保存について
 
-### 現在の仕組み
+### Supabase（クラウドデータベース）
 
-データは**ブラウザのLocalStorage**に保存されています。
+データは **Supabase (PostgreSQL)** に保存されています。
 
-- **メリット**: サーバー不要、即座に保存される
-- **デメリット**: ブラウザ・デバイス間で共有できない、ブラウザのデータをクリアすると消える
+**メリット:**
+- ブラウザを変えてもデータが消えない
+- 複数デバイスから同じデータにアクセス可能
+- Supabaseダッシュボードからデータの確認・編集が可能
 
-### データの場所
+**Supabaseプロジェクト:**
+- URL: `https://mwvewkjxlvciyrumczzr.supabase.co`
+- ダッシュボード: Supabase → Table Editor でデータ確認
 
-ブラウザの開発者ツール → Application → Local Storage で確認できます。
+### テーブル構成
 
-キー:
-- `cocoroboard_customers` - 顧客データ
-- `cocoroboard_projects` - 案件データ
-- `cocoroboard_tasks` - タスクデータ
-- `cocoroboard_invoices` - 請求データ
-- `cocoroboard_view_*` - 表示設定
+| テーブル | 説明 |
+|---------|------|
+| `customers` | 顧客データ |
+| `projects` | 案件データ（活動ログはJSONB） |
+| `tasks` | タスクデータ |
+| `invoices` | 請求データ |
 
-### データのバックアップ
+### 環境変数（オプション）
 
-現時点ではエクスポート機能はありませんが、開発者ツールから手動でJSONをコピーできます。
+Supabaseの接続情報はコードに埋め込まれていますが、環境変数で上書き可能です：
 
-```javascript
-// ブラウザのコンソールで実行
-const backup = {
-  customers: JSON.parse(localStorage.getItem('cocoroboard_customers') || '[]'),
-  projects: JSON.parse(localStorage.getItem('cocoroboard_projects') || '[]'),
-  tasks: JSON.parse(localStorage.getItem('cocoroboard_tasks') || '[]'),
-  invoices: JSON.parse(localStorage.getItem('cocoroboard_invoices') || '[]'),
-};
-console.log(JSON.stringify(backup, null, 2));
+```bash
+VITE_SUPABASE_URL=https://xxxxx.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJ...
 ```
-
-### 将来的なクラウド対応
-
-ストレージ層は抽象化されているため、以下のような拡張が可能です：
-
-1. **Supabase / Firebase**: リアルタイム同期、認証
-2. **Google Drive API**: スプレッドシート連携
-3. **自前のAPI**: Node.js + PostgreSQL等
-
-`src/services/storage.ts` のインターフェースを実装すれば切り替え可能です。
 
 ## ディレクトリ構成
 
 ```
 src/
 ├── components/
-│   ├── common/         # 共通UIコンポーネント
+│   ├── common/         # 共通UIコンポーネント（Button, Modal等）
 │   ├── customers/      # 顧客関連
 │   ├── projects/       # 案件関連
 │   ├── tasks/          # タスク関連
 │   ├── invoices/       # 請求関連
-│   ├── import/         # インポート機能
-│   └── layout/         # レイアウト
-├── stores/             # Zustand ストア
-├── services/           # データ層
-└── types/              # 型定義
+│   ├── import/         # CSVインポート機能
+│   └── layout/         # Sidebar, Header等
+├── stores/             # Zustand ストア（Supabase連携）
+├── services/
+│   ├── supabase.ts     # Supabaseクライアント設定
+│   ├── storage.ts      # ストレージインターフェース
+│   └── localStorage.ts # LocalStorage実装（未使用）
+└── types/              # TypeScript型定義
 ```
 
 ## 案件ステータス
 
-| ステータス | 説明 |
-|-----------|------|
-| 相談中 | 初期相談段階 |
-| 見積中 | 見積作成・提出中 |
-| 制作中 | 実作業中 |
-| 確認待ち | クライアント確認待ち |
-| 完了 | 納品・公開完了 |
-| 保守中 | 運用・保守フェーズ |
-| 失注 | 受注に至らなかった |
+| ステータス | 英語キー | 説明 |
+|-----------|---------|------|
+| 相談中 | `consulting` | 初期相談段階 |
+| 見積中 | `estimating` | 見積作成・提出中 |
+| 制作中 | `in_progress` | 実作業中 |
+| 確認待ち | `waiting_review` | クライアント確認待ち |
+| 完了 | `completed` | 納品・公開完了 |
+| 保守中 | `maintenance` | 運用・保守フェーズ |
+| 失注 | `lost` | 受注に至らなかった |
 
 ## 案件ID体系
 
@@ -121,6 +120,16 @@ src/
 | 受託案件 | YY-NN | 26-01, 26-02 |
 | 自社プロダクト | Pro-NNN | Pro-001 |
 | デモ・サンプル | Demo-NNN | Demo-001 |
+
+## デプロイ
+
+GitHub Actionsで自動デプロイ：
+- `main`ブランチにpush → 自動でビルド → GitHub Pagesに公開
+
+手動デプロイ：
+```bash
+git push origin main
+```
 
 ## ライセンス
 

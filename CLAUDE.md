@@ -6,12 +6,15 @@
 
 CocoroBoard は個人事業向けの業務管理アプリです。NotionやGoogleスプレッドシートの代替として、顧客・案件・タスク・請求を一元管理します。
 
+**公開URL:** https://mapcocoro.github.io/CocoroBoard/
+
 ## よく使うコマンド
 
 ```bash
 npm run dev      # 開発サーバー起動 (localhost:5173)
 npm run build    # 本番ビルド
 npm run preview  # ビルド結果のプレビュー
+git push         # GitHub Pagesに自動デプロイ
 ```
 
 ## アーキテクチャ
@@ -22,22 +25,49 @@ npm run preview  # ビルド結果のプレビュー
 Customer（顧客）
 ├── Project（案件）※1顧客に複数
 │   ├── Task（タスク）※1案件に複数
-│   └── Activity（活動ログ）※案件に埋め込み
+│   └── Activity（活動ログ）※案件のactivitiesフィールドにJSONB配列
 └── Invoice（請求）※1顧客に複数、案件と紐づけ可能
 ```
 
-### 状態管理（Zustand）
+### 状態管理（Zustand + Supabase）
 
-- `useCustomerStore` - 顧客のCRUD
-- `useProjectStore` - 案件のCRUD、案件番号自動生成
-- `useTaskStore` - タスクのCRUD、タスク番号自動生成
-- `useInvoiceStore` - 請求のCRUD、請求番号自動生成
+各ストアは**非同期（async/await）**でSupabaseと通信します。
 
-### データ永続化
+| ストア | 役割 |
+|--------|------|
+| `useCustomerStore` | 顧客のCRUD |
+| `useProjectStore` | 案件のCRUD、案件番号自動生成 |
+| `useTaskStore` | タスクのCRUD、タスク番号自動生成 |
+| `useInvoiceStore` | 請求のCRUD、請求番号自動生成 |
 
-`src/services/localStorage.ts` でLocalStorageに保存。キープレフィックスは `cocoroboard_`。
+### データ永続化（Supabase）
 
-将来的にクラウド対応する場合は `src/services/storage.ts` のインターフェースを実装して差し替え。
+**接続設定:** `src/services/supabase.ts`
+
+```typescript
+// Supabaseクライアント
+import { supabase } from '../services/supabase';
+
+// 使用例
+const { data, error } = await supabase
+  .from('customers')
+  .select('*');
+```
+
+**Supabaseプロジェクト:**
+- URL: `https://mwvewkjxlvciyrumczzr.supabase.co`
+- Region: Northeast Asia (Tokyo)
+
+### データベーステーブル
+
+| テーブル | 主なカラム |
+|---------|-----------|
+| `customers` | id, name, email, phone, company, memo, created_at |
+| `projects` | id, project_number, customer_id, name, status, type, activities(JSONB) |
+| `tasks` | id, task_number, project_id, name, status, priority, due_date |
+| `invoices` | id, invoice_number, customer_id, project_id, amount, tax, status |
+
+**命名規則:** DBはsnake_case、アプリはcamelCase。各ストアに`fromDb`/`toDb`変換関数あり。
 
 ## 型定義（src/types/index.ts）
 
@@ -75,7 +105,7 @@ Customer（顧客）
 | `ProjectList.tsx` | 案件一覧（カード/リスト表示切替、フィルター） |
 | `ProjectDetail.tsx` | 案件詳細、タスク管理、活動ログ |
 | `TaskKanban.tsx` | カンバン形式のタスク表示 |
-| `ImportModal.tsx` | CSVインポート機能 |
+| `ImportModal.tsx` | CSVインポート機能（async対応済み） |
 
 ## 共通コンポーネント（src/components/common/）
 
@@ -87,7 +117,7 @@ Customer（顧客）
 
 ## スタイリング
 
-Tailwind CSSを使用。カスタムCSS変数：
+Tailwind CSSを使用。カスタムCSS変数（`src/index.css`）：
 
 ```css
 --color-primary: #2563eb;      /* プライマリカラー */
@@ -107,9 +137,25 @@ Tailwind CSSを使用。カスタムCSS変数：
 必須列: `プロダクト/案件名` または `タイトル`
 オプション: `開発ID`, `案件ID`, `状態`, `優先度`, `期限` 等
 
+## デプロイ
+
+**自動デプロイ:** `.github/workflows/deploy.yml`
+- mainブランチへのpushで自動実行
+- GitHub Pagesにデプロイ
+
+**SPA対応:** `public/404.html` + `index.html`のリダイレクトスクリプトでサブページのリロードに対応
+
 ## 注意事項
 
-- データはLocalStorageに保存（ブラウザごと、クリアで消える）
+- **データはSupabaseに保存**（ブラウザを変えても消えない）
 - 案件IDは種別ごとに自動採番（手動入力も可能）
-- 活動ログは案件のactivitiesフィールドに配列で保存
+- 活動ログは案件の`activities`フィールドにJSONB配列で保存
 - 進捗バーはタスク完了率から自動計算
+- ストアのメソッドは**async/await**（Promiseを返す）
+
+## Supabase管理
+
+- **ダッシュボード:** https://supabase.com/dashboard
+- **Table Editor:** データの直接確認・編集
+- **SQL Editor:** SQLクエリ実行
+- **RLS:** 現在は全アクセス許可（認証追加時に変更）
