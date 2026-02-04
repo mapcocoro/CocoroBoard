@@ -258,7 +258,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
         // 顧客を作成または取得
         let customerId = customerMap.get(row.クライアント名);
         if (!customerId) {
-          const newCustomer = addCustomer({
+          const newCustomer = await addCustomer({
             name: row.クライアント名,
             email: row.連絡先 || undefined,
             memo: row.ドメイン ? `ドメイン情報:\n${row.ドメイン}` : undefined,
@@ -276,7 +276,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
           row.メモ && `メモ: ${row.メモ}`,
         ].filter(Boolean).join('\n\n');
 
-        const project = addProject({
+        const project = await addProject({
           customerId,
           name: row.案件名 || `${row.クライアント名}案件`,
           description: description || undefined,
@@ -302,7 +302,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
         // 請求を作成（金額がある場合）
         const amount = parseAmount(row['見積金額（税抜）']);
         if (amount > 0) {
-          addInvoice({
+          await addInvoice({
             customerId,
             projectId: project.id,
             invoiceNumber: row.案件ID || generateInvoiceNumber(),
@@ -319,7 +319,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
       // 「自社開発」顧客を作成または取得
       let selfCustomerId = customerMap.get('自社開発');
       if (!selfCustomerId) {
-        const newCustomer = addCustomer({ name: '自社開発' });
+        const newCustomer = await addCustomer({ name: '自社開発' });
         selfCustomerId = newCustomer.id;
         customerMap.set('自社開発', selfCustomerId);
         customerCount++;
@@ -328,7 +328,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
       // 「自社開発」案件を作成または取得（案件IDがないタスク用）
       let selfProjectId = projects.find(p => p.name === '自社開発タスク')?.id;
       if (!selfProjectId) {
-        const newProject = addProject({
+        const newProject = await addProject({
           customerId: selfCustomerId,
           name: '自社開発タスク',
           type: 'internal' as ProjectType,
@@ -340,7 +340,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
 
       for (const row of preview as KaihatsuRow[]) {
         // 案件IDから紐づけ先を特定
-        let projectId = selfProjectId;
+        let projectId = selfProjectId!;
         if (row.案件ID && projectMap.has(row.案件ID)) {
           projectId = projectMap.get(row.案件ID)!;
         }
@@ -353,7 +353,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
           row.ステイタスメモ && `ステイタスメモ: ${row.ステイタスメモ}`,
         ].filter(Boolean).join('\n\n');
 
-        addTask({
+        await addTask({
           projectId,
           name: row['プロダクト/案件名'] || row.タイトル || '無題タスク',
           description: description || undefined,
@@ -378,7 +378,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
         // カテゴリから顧客を作成または取得
         let customerId = customerMap.get(category);
         if (!customerId) {
-          const newCustomer = addCustomer({ name: category });
+          const newCustomer = await addCustomer({ name: category });
           customerId = newCustomer.id;
           customerMap.set(category, customerId);
           customerCount++;
@@ -401,7 +401,7 @@ export function ImportModal({ isOpen, onClose }: ImportModalProps) {
           row.Datebase && `Database: ${row.Datebase}`,
         ].filter(Boolean).join('\n\n');
 
-        addProject({
+        await addProject({
           customerId,
           name: row.プロダクト,
           description: description || undefined,

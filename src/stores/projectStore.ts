@@ -1,17 +1,11 @@
 import { create } from 'zustand';
-import { v4 as uuidv4 } from 'uuid';
-import type { Project, ProjectType } from '../types';
-import { createEntityStorage } from '../services/localStorage';
+import type { Project, ProjectType, Activity } from '../types';
+import { supabase } from '../services/supabase';
 
-const storage = createEntityStorage<Project>('project');
-
-// 案件番号を生成（種別によってプレフィックスが変わる）
-// - client（受託案件）: YY-NN 形式（例: 26-01）
-// - internal（自社プロダクト）: Pro-NNN 形式（例: Pro-001）
-// - demo（デモ・サンプル）: Demo-NNN 形式（例: Demo-001）
+// 案件番号を生成
 function generateProjectNumber(projects: Project[], type: ProjectType = 'client'): string {
   const year = new Date().getFullYear();
-  const shortYear = year.toString().slice(-2); // 26 for 2026
+  const shortYear = year.toString().slice(-2);
 
   let prefix: string;
   let padLength: number;
@@ -32,7 +26,6 @@ function generateProjectNumber(projects: Project[], type: ProjectType = 'client'
       break;
   }
 
-  // 同じプレフィックスの案件番号から最大値を取得
   const matchingNumbers = projects
     .filter(p => p.projectNumber?.startsWith(prefix))
     .map(p => {
@@ -46,16 +39,62 @@ function generateProjectNumber(projects: Project[], type: ProjectType = 'client'
   return `${prefix}${nextNumber}`;
 }
 
+// DB→アプリ型変換
+const fromDb = (row: Record<string, unknown>): Project => ({
+  id: row.id as string,
+  projectNumber: row.project_number as string | undefined,
+  customerId: row.customer_id as string,
+  name: row.name as string,
+  description: row.description as string | undefined,
+  type: (row.type as ProjectType) || 'client',
+  category: row.category as Project['category'],
+  status: row.status as Project['status'],
+  startDate: row.start_date as string | undefined,
+  dueDate: row.due_date as string | undefined,
+  budget: row.budget as number | undefined,
+  domainInfo: row.domain_info as string | undefined,
+  aiConsultUrl: row.ai_consult_url as string | undefined,
+  codeFolder: row.code_folder as string | undefined,
+  meetingFolder: row.meeting_folder as string | undefined,
+  contractFolder: row.contract_folder as string | undefined,
+  stagingUrl: row.staging_url as string | undefined,
+  productionUrl: row.production_url as string | undefined,
+  activities: (row.activities as Activity[]) || [],
+  createdAt: row.created_at as string,
+  updatedAt: row.updated_at as string,
+});
+
+// アプリ→DB型変換
+const toDb = (project: Partial<Project>) => ({
+  ...(project.projectNumber !== undefined && { project_number: project.projectNumber || null }),
+  ...(project.customerId !== undefined && { customer_id: project.customerId }),
+  ...(project.name !== undefined && { name: project.name }),
+  ...(project.description !== undefined && { description: project.description || null }),
+  ...(project.type !== undefined && { type: project.type }),
+  ...(project.category !== undefined && { category: project.category || null }),
+  ...(project.status !== undefined && { status: project.status }),
+  ...(project.startDate !== undefined && { start_date: project.startDate || null }),
+  ...(project.dueDate !== undefined && { due_date: project.dueDate || null }),
+  ...(project.budget !== undefined && { budget: project.budget || null }),
+  ...(project.domainInfo !== undefined && { domain_info: project.domainInfo || null }),
+  ...(project.aiConsultUrl !== undefined && { ai_consult_url: project.aiConsultUrl || null }),
+  ...(project.codeFolder !== undefined && { code_folder: project.codeFolder || null }),
+  ...(project.meetingFolder !== undefined && { meeting_folder: project.meetingFolder || null }),
+  ...(project.contractFolder !== undefined && { contract_folder: project.contractFolder || null }),
+  ...(project.stagingUrl !== undefined && { staging_url: project.stagingUrl || null }),
+  ...(project.productionUrl !== undefined && { production_url: project.productionUrl || null }),
+  ...(project.activities !== undefined && { activities: project.activities }),
+});
+
 interface ProjectState {
   projects: Project[];
   selectedProject: Project | null;
   isLoading: boolean;
 
-  // アクション
-  loadProjects: () => void;
-  addProject: (project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => Project;
-  updateProject: (id: string, updates: Partial<Project>) => void;
-  deleteProject: (id: string) => void;
+  loadProjects: () => Promise<void>;
+  addProject: (project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Project>;
+  updateProject: (id: string, updates: Partial<Project>) => Promise<void>;
+  deleteProject: (id: string) => Promise<void>;
   selectProject: (id: string | null) => void;
   getProjectsByCustomer: (customerId: string) => Project[];
 }
@@ -65,40 +104,76 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   selectedProject: null,
   isLoading: false,
 
-  loadProjects: () => {
+  loadProjects: async () => {
     set({ isLoading: true });
-    const projects = storage.getAll();
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Failed to load projects:', error);
+      set({ isLoading: false });
+      return;
+    }
+
+    const projects = (data || []).map(fromDb);
     set({ projects, isLoading: false });
   },
 
-  addProject: (projectData) => {
-    const now = new Date().toISOString();
-    // projectNumberが渡されていればそれを使用、なければ種別に応じて自動生成
+  addProject: async (projectData) => {
     const projectNumber = projectData.projectNumber || generateProjectNumber(get().projects, projectData.type);
-    const project: Project = {
-      ...projectData,
-      id: uuidv4(),
-      projectNumber,
-      createdAt: now,
-      updatedAt: now,
-    };
-    storage.create(project);
-    set({ projects: [...get().projects, project] });
+
+    const { data, error } = await supabase
+      .from('projects')
+      .insert({
+        ...toDb(projectData as Partial<Project>),
+        project_number: projectNumber,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Failed to add project:', error);
+      throw error;
+    }
+
+    const project = fromDb(data);
+    set({ projects: [project, ...get().projects] });
     return project;
   },
 
-  updateProject: (id, updates) => {
-    const updated = storage.update(id, updates);
-    if (updated) {
-      set({
-        projects: get().projects.map(p => (p.id === id ? updated : p)),
-        selectedProject: get().selectedProject?.id === id ? updated : get().selectedProject,
-      });
+  updateProject: async (id, updates) => {
+    const { data, error } = await supabase
+      .from('projects')
+      .update({ ...toDb(updates), updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Failed to update project:', error);
+      return;
     }
+
+    const updated = fromDb(data);
+    set({
+      projects: get().projects.map(p => (p.id === id ? updated : p)),
+      selectedProject: get().selectedProject?.id === id ? updated : get().selectedProject,
+    });
   },
 
-  deleteProject: (id) => {
-    storage.delete(id);
+  deleteProject: async (id) => {
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Failed to delete project:', error);
+      return;
+    }
+
     set({
       projects: get().projects.filter(p => p.id !== id),
       selectedProject: get().selectedProject?.id === id ? null : get().selectedProject,

@@ -1,43 +1,63 @@
 import { create } from 'zustand';
-import { v4 as uuidv4 } from 'uuid';
 import type { Task, TaskStatus } from '../types';
-import { createEntityStorage } from '../services/localStorage';
+import { supabase } from '../services/supabase';
 
-const storage = createEntityStorage<Task>('task');
-
-// タスク番号を生成（例: T2026-001）
+// タスク番号を生成
 function generateTaskNumber(tasks: Task[]): string {
   const year = new Date().getFullYear();
   const prefix = `T${year}-`;
 
-  // 今年のタスク番号から最大値を取得
-  const thisYearNumbers = tasks
+  const matchingNumbers = tasks
     .filter(t => t.taskNumber?.startsWith(prefix))
     .map(t => {
       const num = parseInt(t.taskNumber!.replace(prefix, ''), 10);
       return isNaN(num) ? 0 : num;
     });
 
-  const maxNumber = thisYearNumbers.length > 0 ? Math.max(...thisYearNumbers) : 0;
+  const maxNumber = matchingNumbers.length > 0 ? Math.max(...matchingNumbers) : 0;
   const nextNumber = (maxNumber + 1).toString().padStart(3, '0');
 
   return `${prefix}${nextNumber}`;
 }
+
+// DB→アプリ型変換
+const fromDb = (row: Record<string, unknown>): Task => ({
+  id: row.id as string,
+  taskNumber: row.task_number as string | undefined,
+  projectId: row.project_id as string,
+  name: row.name as string,
+  description: row.description as string | undefined,
+  status: row.status as Task['status'],
+  priority: row.priority as Task['priority'],
+  dueDate: row.due_date as string | undefined,
+  createdAt: row.created_at as string,
+  updatedAt: row.updated_at as string,
+});
+
+// アプリ→DB型変換
+const toDb = (task: Partial<Task>) => ({
+  ...(task.taskNumber !== undefined && { task_number: task.taskNumber || null }),
+  ...(task.projectId !== undefined && { project_id: task.projectId }),
+  ...(task.name !== undefined && { name: task.name }),
+  ...(task.description !== undefined && { description: task.description || null }),
+  ...(task.status !== undefined && { status: task.status }),
+  ...(task.priority !== undefined && { priority: task.priority }),
+  ...(task.dueDate !== undefined && { due_date: task.dueDate || null }),
+});
 
 interface TaskState {
   tasks: Task[];
   selectedTask: Task | null;
   isLoading: boolean;
 
-  // アクション
-  loadTasks: () => void;
-  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => Task;
-  updateTask: (id: string, updates: Partial<Task>) => void;
-  deleteTask: (id: string) => void;
+  loadTasks: () => Promise<void>;
+  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Task>;
+  updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
+  deleteTask: (id: string) => Promise<void>;
   selectTask: (id: string | null) => void;
   getTasksByProject: (projectId: string) => Task[];
   getTasksByStatus: (status: TaskStatus) => Task[];
-  moveTask: (id: string, status: TaskStatus) => void;
+  moveTask: (id: string, status: TaskStatus) => Promise<void>;
 }
 
 export const useTaskStore = create<TaskState>((set, get) => ({
@@ -45,40 +65,76 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   selectedTask: null,
   isLoading: false,
 
-  loadTasks: () => {
+  loadTasks: async () => {
     set({ isLoading: true });
-    const tasks = storage.getAll();
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Failed to load tasks:', error);
+      set({ isLoading: false });
+      return;
+    }
+
+    const tasks = (data || []).map(fromDb);
     set({ tasks, isLoading: false });
   },
 
-  addTask: (taskData) => {
-    const now = new Date().toISOString();
-    // taskNumberが渡されていればそれを使用、なければ自動生成
+  addTask: async (taskData) => {
     const taskNumber = taskData.taskNumber || generateTaskNumber(get().tasks);
-    const task: Task = {
-      ...taskData,
-      id: uuidv4(),
-      taskNumber,
-      createdAt: now,
-      updatedAt: now,
-    };
-    storage.create(task);
-    set({ tasks: [...get().tasks, task] });
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert({
+        ...toDb(taskData as Partial<Task>),
+        task_number: taskNumber,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Failed to add task:', error);
+      throw error;
+    }
+
+    const task = fromDb(data);
+    set({ tasks: [task, ...get().tasks] });
     return task;
   },
 
-  updateTask: (id, updates) => {
-    const updated = storage.update(id, updates);
-    if (updated) {
-      set({
-        tasks: get().tasks.map(t => (t.id === id ? updated : t)),
-        selectedTask: get().selectedTask?.id === id ? updated : get().selectedTask,
-      });
+  updateTask: async (id, updates) => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .update({ ...toDb(updates), updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Failed to update task:', error);
+      return;
     }
+
+    const updated = fromDb(data);
+    set({
+      tasks: get().tasks.map(t => (t.id === id ? updated : t)),
+      selectedTask: get().selectedTask?.id === id ? updated : get().selectedTask,
+    });
   },
 
-  deleteTask: (id) => {
-    storage.delete(id);
+  deleteTask: async (id) => {
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Failed to delete task:', error);
+      return;
+    }
+
     set({
       tasks: get().tasks.filter(t => t.id !== id),
       selectedTask: get().selectedTask?.id === id ? null : get().selectedTask,
@@ -102,7 +158,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     return get().tasks.filter(t => t.status === status);
   },
 
-  moveTask: (id, status) => {
-    get().updateTask(id, { status });
+  moveTask: async (id, status) => {
+    await get().updateTask(id, { status });
   },
 }));
