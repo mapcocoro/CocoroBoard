@@ -208,11 +208,6 @@ export function TaskList() {
                           )}
                           {task.name}
                         </button>
-                        {task.description && (
-                          <p className="text-sm text-[var(--color-text-muted)] truncate">
-                            {task.description}
-                          </p>
-                        )}
                         {customerName && (
                           <p className="text-xs text-[var(--color-primary)] mt-1">
                             {customerName}
@@ -259,12 +254,12 @@ export function TaskList() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-[var(--color-border)] bg-[var(--color-bg-hover)]">
-                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)]">ID</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)] whitespace-nowrap">ID</th>
                   <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)]">タスク名</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)]">顧客</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)]">ステータス</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)]">優先度</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)]">期限</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)] whitespace-nowrap">カテゴリ</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)] whitespace-nowrap">ステータス</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)] whitespace-nowrap">優先度</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)] whitespace-nowrap">期限</th>
                   <th className="w-20"></th>
                 </tr>
               </thead>
@@ -286,15 +281,12 @@ export function TaskList() {
                         >
                           {task.name}
                         </button>
-                        {task.description && (
-                          <p className="text-xs text-[var(--color-text-muted)] truncate max-w-xs">{task.description}</p>
-                        )}
                       </td>
-                      <td className="px-4 py-3 text-sm">
+                      <td className="px-4 py-3 text-sm whitespace-nowrap">
                         {customerName ? (
                           <span className="text-[var(--color-primary)]">{customerName}</span>
                         ) : (
-                          <span className="text-[var(--color-text-muted)]">自社開発</span>
+                          <span className="text-[var(--color-text-muted)]">-</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
