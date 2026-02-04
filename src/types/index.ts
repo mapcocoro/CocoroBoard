@@ -77,11 +77,13 @@ export interface Task {
   id: ID;
   taskNumber?: string;  // タスクID（例: T2026-001）
   projectId: ID;
+  customerId?: ID;      // 顧客ID（直接紐付け）
   name: string;
   description?: string;
   status: TaskStatus;
   priority: TaskPriority;
   dueDate?: string;
+  activities?: Activity[];  // 活動ログ
   createdAt: string;
   updatedAt: string;
 }
@@ -94,6 +96,7 @@ export interface Invoice {
   id: ID;
   customerId: ID;
   projectId?: ID;
+  taskId?: ID;           // タスクID（紐付け）
   invoiceNumber: string;
   estimateAmount?: number;  // 見積金額（税抜）
   amount: number;           // 請求金額（税抜）

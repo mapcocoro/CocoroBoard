@@ -7,6 +7,7 @@ import { CustomerDetail } from './components/customers/CustomerDetail';
 import { ProjectList } from './components/projects/ProjectList';
 import { ProjectDetail } from './components/projects/ProjectDetail';
 import { TaskList } from './components/tasks/TaskList';
+import { TaskDetail } from './components/tasks/TaskDetail';
 import { InvoiceList } from './components/invoices/InvoiceList';
 import { useCustomerStore, useProjectStore, useTaskStore, useInvoiceStore } from './stores';
 
@@ -34,6 +35,7 @@ function App() {
           <Route path="projects" element={<ProjectList />} />
           <Route path="projects/:id" element={<ProjectDetail />} />
           <Route path="tasks" element={<TaskList />} />
+          <Route path="tasks/:id" element={<TaskDetail />} />
           <Route path="invoices" element={<InvoiceList />} />
         </Route>
       </Routes>

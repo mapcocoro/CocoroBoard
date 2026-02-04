@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Task, TaskStatus } from '../types';
+import type { Task, TaskStatus, Activity, ActivityType } from '../types';
 import { supabase } from '../services/supabase';
 
 // タスク番号を生成
@@ -25,11 +25,13 @@ const fromDb = (row: Record<string, unknown>): Task => ({
   id: row.id as string,
   taskNumber: row.task_number as string | undefined,
   projectId: row.project_id as string,
+  customerId: row.customer_id as string | undefined,
   name: row.name as string,
   description: row.description as string | undefined,
   status: row.status as Task['status'],
   priority: row.priority as Task['priority'],
   dueDate: row.due_date as string | undefined,
+  activities: row.activities as Activity[] | undefined,
   createdAt: row.created_at as string,
   updatedAt: row.updated_at as string,
 });
@@ -38,11 +40,13 @@ const fromDb = (row: Record<string, unknown>): Task => ({
 const toDb = (task: Partial<Task>) => ({
   ...(task.taskNumber !== undefined && { task_number: task.taskNumber || null }),
   ...(task.projectId !== undefined && { project_id: task.projectId }),
+  ...(task.customerId !== undefined && { customer_id: task.customerId || null }),
   ...(task.name !== undefined && { name: task.name }),
   ...(task.description !== undefined && { description: task.description || null }),
   ...(task.status !== undefined && { status: task.status }),
   ...(task.priority !== undefined && { priority: task.priority }),
   ...(task.dueDate !== undefined && { due_date: task.dueDate || null }),
+  ...(task.activities !== undefined && { activities: task.activities || [] }),
 });
 
 interface TaskState {
@@ -58,6 +62,8 @@ interface TaskState {
   getTasksByProject: (projectId: string) => Task[];
   getTasksByStatus: (status: TaskStatus) => Task[];
   moveTask: (id: string, status: TaskStatus) => Promise<void>;
+  addActivity: (taskId: string, type: ActivityType, content: string) => Promise<void>;
+  removeActivity: (taskId: string, activityId: string) => Promise<void>;
 }
 
 export const useTaskStore = create<TaskState>((set, get) => ({
@@ -160,5 +166,29 @@ export const useTaskStore = create<TaskState>((set, get) => ({
 
   moveTask: async (id, status) => {
     await get().updateTask(id, { status });
+  },
+
+  addActivity: async (taskId, type, content) => {
+    const task = get().tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const newActivity: Activity = {
+      id: crypto.randomUUID(),
+      date: new Date().toISOString().split('T')[0],
+      type,
+      content,
+      createdAt: new Date().toISOString(),
+    };
+
+    const activities = [...(task.activities || []), newActivity];
+    await get().updateTask(taskId, { activities });
+  },
+
+  removeActivity: async (taskId, activityId) => {
+    const task = get().tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const activities = (task.activities || []).filter(a => a.id !== activityId);
+    await get().updateTask(taskId, { activities });
   },
 }));

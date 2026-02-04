@@ -7,6 +7,7 @@ const fromDb = (row: Record<string, unknown>): Invoice => ({
   id: row.id as string,
   customerId: row.customer_id as string,
   projectId: row.project_id as string | undefined,
+  taskId: row.task_id as string | undefined,
   invoiceNumber: row.invoice_number as string,
   estimateAmount: row.estimate_amount as number | undefined,
   amount: row.amount as number,
@@ -24,6 +25,7 @@ const fromDb = (row: Record<string, unknown>): Invoice => ({
 const toDb = (invoice: Partial<Invoice>) => ({
   ...(invoice.customerId !== undefined && { customer_id: invoice.customerId }),
   ...(invoice.projectId !== undefined && { project_id: invoice.projectId || null }),
+  ...(invoice.taskId !== undefined && { task_id: invoice.taskId || null }),
   ...(invoice.invoiceNumber !== undefined && { invoice_number: invoice.invoiceNumber }),
   ...(invoice.estimateAmount !== undefined && { estimate_amount: invoice.estimateAmount || null }),
   ...(invoice.amount !== undefined && { amount: invoice.amount }),
@@ -47,6 +49,7 @@ interface InvoiceState {
   selectInvoice: (id: string | null) => void;
   getInvoicesByCustomer: (customerId: string) => Invoice[];
   getInvoicesByProject: (projectId: string) => Invoice[];
+  getInvoicesByTask: (taskId: string) => Invoice[];
   generateInvoiceNumber: () => string;
 }
 
@@ -141,6 +144,10 @@ export const useInvoiceStore = create<InvoiceState>((set, get) => ({
 
   getInvoicesByProject: (projectId) => {
     return get().invoices.filter(i => i.projectId === projectId);
+  },
+
+  getInvoicesByTask: (taskId) => {
+    return get().invoices.filter(i => i.taskId === taskId);
   },
 
   generateInvoiceNumber: () => {

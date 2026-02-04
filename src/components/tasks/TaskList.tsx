@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Header } from '../layout/Header';
 import { Button, Modal, Badge, EmptyState, ConfirmDialog, Card, CardBody, useViewMode } from '../common';
 import { TaskForm } from './TaskForm';
@@ -8,6 +9,7 @@ import type { Task, TaskStatus } from '../../types';
 import { format } from 'date-fns';
 
 export function TaskList() {
+  const navigate = useNavigate();
   const { tasks, addTask, updateTask, deleteTask } = useTaskStore();
   const { projects, addProject } = useProjectStore();
   const { customers } = useCustomerStore();
@@ -197,12 +199,15 @@ export function TaskList() {
                   <CardBody>
                     <div className="flex justify-between items-start mb-2">
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-medium text-[var(--color-text)] truncate">
+                        <button
+                          onClick={() => navigate(`/tasks/${task.id}`)}
+                          className="font-medium text-[var(--color-primary)] hover:underline truncate text-left block w-full"
+                        >
                           {task.taskNumber && (
                             <span className="text-[var(--color-text-muted)] font-normal mr-2">{task.taskNumber}</span>
                           )}
                           {task.name}
-                        </h3>
+                        </button>
                         {task.description && (
                           <p className="text-sm text-[var(--color-text-muted)] truncate">
                             {task.description}
@@ -275,7 +280,12 @@ export function TaskList() {
                         {task.taskNumber || '-'}
                       </td>
                       <td className="px-4 py-3">
-                        <p className="font-medium text-sm text-[var(--color-text)]">{task.name}</p>
+                        <button
+                          onClick={() => navigate(`/tasks/${task.id}`)}
+                          className="font-medium text-sm text-[var(--color-primary)] hover:underline text-left"
+                        >
+                          {task.name}
+                        </button>
                         {task.description && (
                           <p className="text-xs text-[var(--color-text-muted)] truncate max-w-xs">{task.description}</p>
                         )}
