@@ -37,6 +37,17 @@ export function TaskForm({ task, projectId, onSubmit, onCancel }: TaskFormProps)
   });
 
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState('');
+
+  // 自社系カテゴリかどうかを判定
+  const isSelfCategory = (name: string) => {
+    const selfPatterns = ['自社', 'demo/', 'Demo/', 'Pro/', 'その他/', '未分類'];
+    return selfPatterns.some(pattern => name.includes(pattern) || name.toLowerCase().startsWith(pattern.toLowerCase()));
+  };
+
+  // 自社カテゴリと顧客を分離
+  const selfCategories = customers.filter(c => isSelfCategory(c.name));
+  const realCustomers = customers.filter(c => !isSelfCategory(c.name) && c.name !== '自社開発');
 
   useEffect(() => {
     if (task) {
@@ -48,13 +59,39 @@ export function TaskForm({ task, projectId, onSubmit, onCancel }: TaskFormProps)
         priority: task.priority,
         dueDate: task.dueDate || '',
       });
-      setSelectedCustomerId(getCustomerIdFromTask(task));
+      const customerId = getCustomerIdFromTask(task);
+      if (customerId) {
+        const customer = customers.find(c => c.id === customerId);
+        if (customer && isSelfCategory(customer.name)) {
+          setSelectedCategoryId(customerId);
+          setSelectedCustomerId('');
+        } else {
+          setSelectedCustomerId(customerId);
+          setSelectedCategoryId('');
+        }
+      }
     }
   }, [task]);
 
+  const handleCategoryChange = (categoryId: string) => {
+    setSelectedCategoryId(categoryId);
+    if (categoryId) {
+      setSelectedCustomerId(''); // 顧客をクリア
+    }
+  };
+
+  const handleCustomerChange = (customerId: string) => {
+    setSelectedCustomerId(customerId);
+    if (customerId) {
+      setSelectedCategoryId(''); // カテゴリをクリア
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData, selectedCustomerId || undefined);
+    // カテゴリか顧客、どちらかを渡す
+    const effectiveCustomerId = selectedCustomerId || selectedCategoryId || undefined;
+    onSubmit(formData, effectiveCustomerId);
   };
 
   const statusOptions = Object.entries(TASK_STATUS_LABELS).map(([value, label]) => ({
@@ -67,11 +104,14 @@ export function TaskForm({ task, projectId, onSubmit, onCancel }: TaskFormProps)
     label,
   }));
 
+  const categoryOptions = [
+    { value: '', label: '選択なし' },
+    ...selfCategories.map((c) => ({ value: c.id, label: c.name })),
+  ];
+
   const customerOptions = [
-    { value: '', label: '自社開発（顧客なし）' },
-    ...customers
-      .filter(c => c.name !== '自社開発') // 「自社開発」顧客は除外
-      .map((c) => ({ value: c.id, label: c.name })),
+    { value: '', label: '選択なし' },
+    ...realCustomers.map((c) => ({ value: c.id, label: c.name })),
   ];
 
   return (
@@ -83,12 +123,20 @@ export function TaskForm({ task, projectId, onSubmit, onCancel }: TaskFormProps)
         required
         placeholder="【開発】〇〇機能追加"
       />
-      <Select
-        label="顧客"
-        value={selectedCustomerId}
-        onChange={(e) => setSelectedCustomerId(e.target.value)}
-        options={customerOptions}
-      />
+      <div className="grid grid-cols-2 gap-4">
+        <Select
+          label="自社カテゴリ"
+          value={selectedCategoryId}
+          onChange={(e) => handleCategoryChange(e.target.value)}
+          options={categoryOptions}
+        />
+        <Select
+          label="顧客"
+          value={selectedCustomerId}
+          onChange={(e) => handleCustomerChange(e.target.value)}
+          options={customerOptions}
+        />
+      </div>
       <Textarea
         label="詳細"
         value={formData.description}
