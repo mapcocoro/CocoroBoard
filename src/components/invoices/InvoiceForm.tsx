@@ -6,18 +6,21 @@ import { INVOICE_STATUS_LABELS } from '../../types';
 
 interface InvoiceFormProps {
   invoice?: Invoice;
+  taskId?: string;           // タスクから作成する場合
+  defaultCustomerId?: string; // デフォルトの顧客ID
   onSubmit: (data: Omit<Invoice, 'id' | 'createdAt' | 'updatedAt'>) => void;
   onCancel: () => void;
 }
 
-export function InvoiceForm({ invoice, onSubmit, onCancel }: InvoiceFormProps) {
+export function InvoiceForm({ invoice, taskId, defaultCustomerId, onSubmit, onCancel }: InvoiceFormProps) {
   const { customers } = useCustomerStore();
   const { projects } = useProjectStore();
   const { generateInvoiceNumber } = useInvoiceStore();
 
   const [formData, setFormData] = useState({
-    customerId: '',
+    customerId: defaultCustomerId || '',
     projectId: '',
+    taskId: taskId || '',
     invoiceNumber: '',
     estimateAmount: '',
     amount: '',
@@ -34,6 +37,7 @@ export function InvoiceForm({ invoice, onSubmit, onCancel }: InvoiceFormProps) {
       setFormData({
         customerId: invoice.customerId,
         projectId: invoice.projectId || '',
+        taskId: invoice.taskId || taskId || '',
         invoiceNumber: invoice.invoiceNumber,
         estimateAmount: invoice.estimateAmount?.toString() || '',
         amount: invoice.amount.toString(),
@@ -80,6 +84,7 @@ export function InvoiceForm({ invoice, onSubmit, onCancel }: InvoiceFormProps) {
     onSubmit({
       customerId: formData.customerId,
       projectId: formData.projectId || undefined,
+      taskId: formData.taskId || undefined,
       invoiceNumber: formData.invoiceNumber,
       estimateAmount: formData.estimateAmount ? Number(formData.estimateAmount) : undefined,
       amount: Number(formData.amount),

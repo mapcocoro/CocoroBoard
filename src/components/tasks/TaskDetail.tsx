@@ -3,9 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Header } from '../layout/Header';
 import { Button, Modal, Card, CardHeader, CardBody, Badge, EmptyState, ConfirmDialog, Input, Select, Textarea } from '../common';
 import { TaskForm } from './TaskForm';
+import { InvoiceForm } from '../invoices/InvoiceForm';
 import { useTaskStore, useCustomerStore, useProjectStore, useInvoiceStore } from '../../stores';
 import { TASK_STATUS_LABELS, TASK_PRIORITY_LABELS, ACTIVITY_TYPE_LABELS, ACTIVITY_TYPE_ICONS, INVOICE_STATUS_LABELS } from '../../types';
-import type { Task, ActivityType } from '../../types';
+import type { Task, ActivityType, Invoice } from '../../types';
 import { format } from 'date-fns';
 
 export function TaskDetail() {
@@ -14,12 +15,13 @@ export function TaskDetail() {
   const { tasks, updateTask, deleteTask, addActivity, removeActivity } = useTaskStore();
   const { customers } = useCustomerStore();
   const { projects } = useProjectStore();
-  const { getInvoicesByTask } = useInvoiceStore();
+  const { getInvoicesByTask, addInvoice } = useInvoiceStore();
 
   const [task, setTask] = useState<Task | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [newActivity, setNewActivity] = useState({
     date: new Date().toISOString().split('T')[0],
     type: 'other' as ActivityType,
@@ -46,13 +48,21 @@ export function TaskDetail() {
     );
   }
 
-  // 顧客名を取得
-  const getCustomerName = () => {
+  // 顧客IDを取得
+  const getCustomerId = () => {
     const project = projects.find(p => p.id === task.projectId);
     if (!project || project.name === '自社開発タスク') return null;
-    return customers.find(c => c.id === project.customerId)?.name;
+    return project.customerId;
   };
 
+  // 顧客名を取得
+  const getCustomerName = () => {
+    const customerId = getCustomerId();
+    if (!customerId) return null;
+    return customers.find(c => c.id === customerId)?.name;
+  };
+
+  const customerId = getCustomerId();
   const customerName = getCustomerName();
   const taskInvoices = getInvoicesByTask(task.id);
 
@@ -79,6 +89,11 @@ export function TaskDetail() {
 
   const handleDeleteActivity = async (activityId: string) => {
     await removeActivity(task.id, activityId);
+  };
+
+  const handleAddInvoice = async (data: Omit<Invoice, 'id' | 'createdAt' | 'updatedAt'>) => {
+    await addInvoice(data);
+    setIsInvoiceModalOpen(false);
   };
 
   const getStatusBadgeVariant = (status: string) => {
@@ -227,9 +242,16 @@ export function TaskDetail() {
         <Card>
           <CardHeader className="flex justify-between items-center">
             <h3 className="font-medium">関連する請求</h3>
-            <Button size="sm" onClick={() => navigate('/invoices')}>
-              請求一覧へ
-            </Button>
+            <div className="flex gap-2">
+              {customerId && (
+                <Button size="sm" onClick={() => setIsInvoiceModalOpen(true)}>
+                  + 請求追加
+                </Button>
+              )}
+              <Button size="sm" variant="secondary" onClick={() => navigate('/invoices')}>
+                請求一覧へ
+              </Button>
+            </div>
           </CardHeader>
           <CardBody>
             {taskInvoices.length === 0 ? (
@@ -328,6 +350,21 @@ export function TaskDetail() {
         message={`「${task.name}」を削除しますか？`}
         confirmLabel="削除"
       />
+
+      {customerId && (
+        <Modal
+          isOpen={isInvoiceModalOpen}
+          onClose={() => setIsInvoiceModalOpen(false)}
+          title="請求を作成"
+        >
+          <InvoiceForm
+            taskId={task.id}
+            defaultCustomerId={customerId}
+            onSubmit={handleAddInvoice}
+            onCancel={() => setIsInvoiceModalOpen(false)}
+          />
+        </Modal>
+      )}
     </div>
   );
 }
