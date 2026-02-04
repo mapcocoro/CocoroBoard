@@ -2,27 +2,70 @@ import { useState } from 'react';
 import { Header } from '../layout/Header';
 import { Button, Modal, Badge, EmptyState, ConfirmDialog, Card, CardBody, useViewMode } from '../common';
 import { TaskForm } from './TaskForm';
-import { useTaskStore } from '../../stores';
+import { useTaskStore, useProjectStore, useCustomerStore } from '../../stores';
 import { TASK_STATUS_LABELS, TASK_PRIORITY_LABELS } from '../../types';
 import type { Task, TaskStatus } from '../../types';
 import { format } from 'date-fns';
 
 export function TaskList() {
   const { tasks, addTask, updateTask, deleteTask } = useTaskStore();
+  const { projects, addProject } = useProjectStore();
+  const { customers } = useCustomerStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Task | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
   const [filterStatus, setFilterStatus] = useState<TaskStatus | 'all'>('all');
   const [viewMode, setViewMode] = useViewMode('tasks', 'list');
 
-  const handleCreate = (data: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
-    addTask(data);
+  // 顧客IDからprojectIdを取得（なければ作成）
+  const getOrCreateProjectForCustomer = async (customerId?: string): Promise<string> => {
+    // 顧客なし → 「自社開発タスク」
+    if (!customerId) {
+      const selfProject = projects.find(p => p.name === '自社開発タスク');
+      if (selfProject) return selfProject.id;
+      // なければ作成
+      const selfCustomer = customers.find(c => c.name === '自社開発');
+      if (selfCustomer) {
+        const newProject = await addProject({
+          customerId: selfCustomer.id,
+          name: '自社開発タスク',
+          type: 'internal',
+          status: 'in_progress',
+        });
+        return newProject.id;
+      }
+      // 自社開発顧客もなければ最初のプロジェクトを使用
+      return projects[0]?.id || '';
+    }
+
+    // 顧客あり → その顧客の「開発タスク」案件を探す
+    const customerProject = projects.find(
+      p => p.customerId === customerId && p.name.includes('タスク')
+    ) || projects.find(p => p.customerId === customerId);
+
+    if (customerProject) return customerProject.id;
+
+    // なければ作成
+    const customer = customers.find(c => c.id === customerId);
+    const newProject = await addProject({
+      customerId,
+      name: `${customer?.name || ''}タスク`,
+      type: 'client',
+      status: 'in_progress',
+    });
+    return newProject.id;
+  };
+
+  const handleCreate = async (data: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>, customerId?: string) => {
+    const projectId = await getOrCreateProjectForCustomer(customerId);
+    await addTask({ ...data, projectId });
     setIsModalOpen(false);
   };
 
-  const handleUpdate = (data: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const handleUpdate = async (data: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>, customerId?: string) => {
     if (editTarget) {
-      updateTask(editTarget.id, data);
+      const projectId = await getOrCreateProjectForCustomer(customerId);
+      await updateTask(editTarget.id, { ...data, projectId });
       setEditTarget(null);
     }
   };
@@ -32,6 +75,13 @@ export function TaskList() {
       deleteTask(deleteTarget.id);
       setDeleteTarget(null);
     }
+  };
+
+  // 顧客名を取得
+  const getCustomerName = (task: Task) => {
+    const project = projects.find(p => p.id === task.projectId);
+    if (!project || project.name === '自社開発タスク') return null;
+    return customers.find(c => c.id === project.customerId)?.name;
   };
 
   const getStatusBadgeVariant = (status: TaskStatus) => {
@@ -140,56 +190,64 @@ export function TaskList() {
           />
         ) : viewMode === 'card' ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {sortedTasks.map((task) => (
-              <Card key={task.id}>
-                <CardBody>
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-medium text-[var(--color-text)] truncate">
-                        {task.taskNumber && (
-                          <span className="text-[var(--color-text-muted)] font-normal mr-2">{task.taskNumber}</span>
+            {sortedTasks.map((task) => {
+              const customerName = getCustomerName(task);
+              return (
+                <Card key={task.id}>
+                  <CardBody>
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-medium text-[var(--color-text)] truncate">
+                          {task.taskNumber && (
+                            <span className="text-[var(--color-text-muted)] font-normal mr-2">{task.taskNumber}</span>
+                          )}
+                          {task.name}
+                        </h3>
+                        {task.description && (
+                          <p className="text-sm text-[var(--color-text-muted)] truncate">
+                            {task.description}
+                          </p>
                         )}
-                        {task.name}
-                      </h3>
-                      {task.description && (
-                        <p className="text-sm text-[var(--color-text-muted)] truncate">
-                          {task.description}
-                        </p>
+                        {customerName && (
+                          <p className="text-xs text-[var(--color-primary)] mt-1">
+                            {customerName}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => setEditTarget(task)}
+                          className="text-[var(--color-text-muted)] hover:text-[var(--color-primary)] p-1"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          onClick={() => setDeleteTarget(task)}
+                          className="text-[var(--color-text-muted)] hover:text-red-500 p-1"
+                        >
+                          🗑
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between mt-3">
+                      <div className="flex gap-2">
+                        <Badge variant={getStatusBadgeVariant(task.status)}>
+                          {TASK_STATUS_LABELS[task.status]}
+                        </Badge>
+                        <Badge variant={getPriorityBadgeVariant(task.priority)}>
+                          {TASK_PRIORITY_LABELS[task.priority]}
+                        </Badge>
+                      </div>
+                      {task.dueDate && (
+                        <span className="text-xs text-[var(--color-text-muted)]">
+                          {format(new Date(task.dueDate), 'MM/dd')}
+                        </span>
                       )}
                     </div>
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => setEditTarget(task)}
-                        className="text-[var(--color-text-muted)] hover:text-[var(--color-primary)] p-1"
-                      >
-                        ✏️
-                      </button>
-                      <button
-                        onClick={() => setDeleteTarget(task)}
-                        className="text-[var(--color-text-muted)] hover:text-red-500 p-1"
-                      >
-                        🗑
-                      </button>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between mt-3">
-                    <div className="flex gap-2">
-                      <Badge variant={getStatusBadgeVariant(task.status)}>
-                        {TASK_STATUS_LABELS[task.status]}
-                      </Badge>
-                      <Badge variant={getPriorityBadgeVariant(task.priority)}>
-                        {TASK_PRIORITY_LABELS[task.priority]}
-                      </Badge>
-                    </div>
-                    {task.dueDate && (
-                      <span className="text-xs text-[var(--color-text-muted)]">
-                        {format(new Date(task.dueDate), 'MM/dd')}
-                      </span>
-                    )}
-                  </div>
-                </CardBody>
-              </Card>
-            ))}
+                  </CardBody>
+                </Card>
+              );
+            })}
           </div>
         ) : (
           <div className="bg-white border border-[var(--color-border)] rounded-lg overflow-hidden">
@@ -198,6 +256,7 @@ export function TaskList() {
                 <tr className="border-b border-[var(--color-border)] bg-[var(--color-bg-hover)]">
                   <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)]">ID</th>
                   <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)]">タスク名</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)]">顧客</th>
                   <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)]">ステータス</th>
                   <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)]">優先度</th>
                   <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)]">期限</th>
@@ -205,51 +264,61 @@ export function TaskList() {
                 </tr>
               </thead>
               <tbody>
-                {sortedTasks.map((task) => (
-                  <tr
-                    key={task.id}
-                    className="border-b border-[var(--color-border)] last:border-b-0 hover:bg-[var(--color-bg-hover)]"
-                  >
-                    <td className="px-4 py-3 text-sm text-[var(--color-text-muted)]">
-                      {task.taskNumber || '-'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-sm text-[var(--color-text)]">{task.name}</p>
-                      {task.description && (
-                        <p className="text-xs text-[var(--color-text-muted)] truncate max-w-xs">{task.description}</p>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge variant={getStatusBadgeVariant(task.status)}>
-                        {TASK_STATUS_LABELS[task.status]}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge variant={getPriorityBadgeVariant(task.priority)}>
-                        {TASK_PRIORITY_LABELS[task.priority]}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-[var(--color-text-muted)]">
-                      {task.dueDate ? format(new Date(task.dueDate), 'yyyy/MM/dd') : '-'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setEditTarget(task)}
-                          className="text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          onClick={() => setDeleteTarget(task)}
-                          className="text-[var(--color-text-muted)] hover:text-red-500"
-                        >
-                          🗑
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {sortedTasks.map((task) => {
+                  const customerName = getCustomerName(task);
+                  return (
+                    <tr
+                      key={task.id}
+                      className="border-b border-[var(--color-border)] last:border-b-0 hover:bg-[var(--color-bg-hover)]"
+                    >
+                      <td className="px-4 py-3 text-sm text-[var(--color-text-muted)]">
+                        {task.taskNumber || '-'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-sm text-[var(--color-text)]">{task.name}</p>
+                        {task.description && (
+                          <p className="text-xs text-[var(--color-text-muted)] truncate max-w-xs">{task.description}</p>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {customerName ? (
+                          <span className="text-[var(--color-primary)]">{customerName}</span>
+                        ) : (
+                          <span className="text-[var(--color-text-muted)]">自社開発</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge variant={getStatusBadgeVariant(task.status)}>
+                          {TASK_STATUS_LABELS[task.status]}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge variant={getPriorityBadgeVariant(task.priority)}>
+                          {TASK_PRIORITY_LABELS[task.priority]}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-[var(--color-text-muted)]">
+                        {task.dueDate ? format(new Date(task.dueDate), 'yyyy/MM/dd') : '-'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setEditTarget(task)}
+                            className="text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => setDeleteTarget(task)}
+                            className="text-[var(--color-text-muted)] hover:text-red-500"
+                          >
+                            🗑
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
