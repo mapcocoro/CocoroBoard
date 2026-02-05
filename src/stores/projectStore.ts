@@ -97,6 +97,7 @@ interface ProjectState {
   deleteProject: (id: string) => Promise<void>;
   selectProject: (id: string | null) => void;
   getProjectsByCustomer: (customerId: string) => Project[];
+  toggleActivityCompleted: (projectId: string, activityId: string) => Promise<void>;
 }
 
 export const useProjectStore = create<ProjectState>((set, get) => ({
@@ -191,5 +192,15 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
   getProjectsByCustomer: (customerId) => {
     return get().projects.filter(p => p.customerId === customerId);
+  },
+
+  toggleActivityCompleted: async (projectId, activityId) => {
+    const project = get().projects.find(p => p.id === projectId);
+    if (!project) return;
+
+    const activities = (project.activities || []).map(a =>
+      a.id === activityId ? { ...a, completed: !a.completed } : a
+    );
+    await get().updateProject(projectId, { activities });
   },
 }));

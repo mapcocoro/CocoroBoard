@@ -31,6 +31,7 @@ export interface Activity {
   date: string;
   type: ActivityType;
   content: string;
+  completed?: boolean;  // 完了フラグ（未完了=false/undefined、完了=true）
   createdAt: string;
 }
 

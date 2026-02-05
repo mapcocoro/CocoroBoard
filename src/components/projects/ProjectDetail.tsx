@@ -59,7 +59,7 @@ function PathOrLink({ value }: { value: string }) {
 export function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { projects, updateProject, deleteProject } = useProjectStore();
+  const { projects, updateProject, deleteProject, toggleActivityCompleted } = useProjectStore();
   const { customers } = useCustomerStore();
   const { tasks, addTask, deleteTask, moveTask } = useTaskStore();
 
@@ -139,6 +139,12 @@ export function ProjectDetail() {
     const updatedActivities = (project.activities || []).filter(a => a.id !== activityId);
     updateProject(project.id, { activities: updatedActivities });
   };
+
+  const handleToggleActivityCompleted = async (activityId: string) => {
+    await toggleActivityCompleted(project.id, activityId);
+  };
+
+  const today = new Date().toISOString().split('T')[0];
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -323,30 +329,56 @@ export function ProjectDetail() {
               </p>
             ) : (
               <div className="space-y-3">
-                {project.activities.map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-start gap-3 p-3 rounded-md bg-[var(--color-bg-hover)] group"
-                  >
-                    <span className="text-xl flex-shrink-0">{ACTIVITY_TYPE_ICONS[activity.type]}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-medium text-[var(--color-text-muted)]">
-                          {format(new Date(activity.date), 'yyyy/MM/dd')}
-                        </span>
-                        <Badge variant="default">{ACTIVITY_TYPE_LABELS[activity.type]}</Badge>
-                      </div>
-                      <p className="text-sm text-[var(--color-text)] whitespace-pre-wrap">{activity.content}</p>
-                    </div>
-                    <button
-                      onClick={() => handleDeleteActivity(activity.id)}
-                      className="text-[var(--color-text-muted)] hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="削除"
+                {project.activities.map((activity) => {
+                  const isFuture = activity.date >= today;
+                  return (
+                    <div
+                      key={activity.id}
+                      className={`flex items-start gap-3 p-3 rounded-md group ${
+                        activity.completed
+                          ? 'bg-gray-50 opacity-60'
+                          : isFuture
+                            ? 'bg-blue-50 border border-blue-100'
+                            : 'bg-[var(--color-bg-hover)]'
+                      }`}
                     >
-                      🗑
-                    </button>
-                  </div>
-                ))}
+                      <button
+                        onClick={() => handleToggleActivityCompleted(activity.id)}
+                        className="text-xl flex-shrink-0 hover:scale-110 transition-transform"
+                        title={activity.completed ? '未完了に戻す' : '完了にする'}
+                      >
+                        {activity.completed ? '☑️' : '☐'}
+                      </button>
+                      <span className="text-xl flex-shrink-0">
+                        {isFuture && !activity.completed ? '📅' : ACTIVITY_TYPE_ICONS[activity.type]}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`text-xs font-medium ${
+                            isFuture && !activity.completed
+                              ? 'text-blue-600'
+                              : 'text-[var(--color-text-muted)]'
+                          }`}>
+                            {format(new Date(activity.date), 'yyyy/MM/dd')}
+                          </span>
+                          <Badge variant="default">{ACTIVITY_TYPE_LABELS[activity.type]}</Badge>
+                        </div>
+                        <p className={`text-sm whitespace-pre-wrap ${
+                          activity.completed
+                            ? 'text-[var(--color-text-muted)] line-through'
+                            : 'text-[var(--color-text)]'
+                        }`}>{activity.content}</p>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteActivity(activity.id)}
+                        className="text-[var(--color-text-muted)] hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="削除"
+                      >
+                        🗑
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </CardBody>

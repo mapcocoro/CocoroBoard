@@ -12,7 +12,7 @@ import { format } from 'date-fns';
 export function TaskDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { tasks, updateTask, deleteTask, addActivity, removeActivity } = useTaskStore();
+  const { tasks, updateTask, deleteTask, addActivity, removeActivity, toggleActivityCompleted } = useTaskStore();
   const { customers } = useCustomerStore();
   const { projects } = useProjectStore();
   const { getInvoicesByTask, addInvoice } = useInvoiceStore();
@@ -78,7 +78,7 @@ export function TaskDetail() {
 
   const handleAddActivity = async () => {
     if (!newActivity.content.trim()) return;
-    await addActivity(task.id, newActivity.type, newActivity.content.trim());
+    await addActivity(task.id, newActivity.type, newActivity.content.trim(), newActivity.date);
     setNewActivity({
       date: new Date().toISOString().split('T')[0],
       type: 'other',
@@ -90,6 +90,12 @@ export function TaskDetail() {
   const handleDeleteActivity = async (activityId: string) => {
     await removeActivity(task.id, activityId);
   };
+
+  const handleToggleActivityCompleted = async (activityId: string) => {
+    await toggleActivityCompleted(task.id, activityId);
+  };
+
+  const today = new Date().toISOString().split('T')[0];
 
   const handleAddInvoice = async (data: Omit<Invoice, 'id' | 'createdAt' | 'updatedAt'>) => {
     await addInvoice(data);
@@ -263,30 +269,56 @@ export function TaskDetail() {
               <div className="space-y-3">
                 {[...task.activities]
                   .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                  .map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-start gap-3 p-3 rounded-md bg-[var(--color-bg-hover)] group"
-                  >
-                    <span className="text-xl flex-shrink-0">{ACTIVITY_TYPE_ICONS[activity.type]}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-medium text-[var(--color-text-muted)]">
-                          {format(new Date(activity.date), 'yyyy/MM/dd')}
+                  .map((activity) => {
+                    const isFuture = activity.date >= today;
+                    return (
+                      <div
+                        key={activity.id}
+                        className={`flex items-start gap-3 p-3 rounded-md group ${
+                          activity.completed
+                            ? 'bg-gray-50 opacity-60'
+                            : isFuture
+                              ? 'bg-blue-50 border border-blue-100'
+                              : 'bg-[var(--color-bg-hover)]'
+                        }`}
+                      >
+                        <button
+                          onClick={() => handleToggleActivityCompleted(activity.id)}
+                          className="text-xl flex-shrink-0 hover:scale-110 transition-transform"
+                          title={activity.completed ? '未完了に戻す' : '完了にする'}
+                        >
+                          {activity.completed ? '☑️' : '☐'}
+                        </button>
+                        <span className="text-xl flex-shrink-0">
+                          {isFuture && !activity.completed ? '📅' : ACTIVITY_TYPE_ICONS[activity.type]}
                         </span>
-                        <Badge variant="default">{ACTIVITY_TYPE_LABELS[activity.type]}</Badge>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`text-xs font-medium ${
+                              isFuture && !activity.completed
+                                ? 'text-blue-600'
+                                : 'text-[var(--color-text-muted)]'
+                            }`}>
+                              {format(new Date(activity.date), 'yyyy/MM/dd')}
+                            </span>
+                            <Badge variant="default">{ACTIVITY_TYPE_LABELS[activity.type]}</Badge>
+                          </div>
+                          <p className={`text-sm whitespace-pre-wrap ${
+                            activity.completed
+                              ? 'text-[var(--color-text-muted)] line-through'
+                              : 'text-[var(--color-text)]'
+                          }`}>{activity.content}</p>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteActivity(activity.id)}
+                          className="text-[var(--color-text-muted)] hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="削除"
+                        >
+                          🗑
+                        </button>
                       </div>
-                      <p className="text-sm text-[var(--color-text)] whitespace-pre-wrap">{activity.content}</p>
-                    </div>
-                    <button
-                      onClick={() => handleDeleteActivity(activity.id)}
-                      className="text-[var(--color-text-muted)] hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="削除"
-                    >
-                      🗑
-                    </button>
-                  </div>
-                ))}
+                    );
+                  })}
               </div>
             )}
           </CardBody>

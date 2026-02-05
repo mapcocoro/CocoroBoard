@@ -4,13 +4,13 @@ import { Header } from '../layout/Header';
 import { Button, Modal, Badge, EmptyState, ConfirmDialog, Card, CardBody, useViewMode } from '../common';
 import { TaskForm } from './TaskForm';
 import { useTaskStore, useProjectStore, useCustomerStore } from '../../stores';
-import { TASK_STATUS_LABELS, TASK_PRIORITY_LABELS } from '../../types';
-import type { Task, TaskStatus } from '../../types';
+import { TASK_STATUS_LABELS, TASK_PRIORITY_LABELS, ACTIVITY_TYPE_ICONS, ACTIVITY_TYPE_LABELS } from '../../types';
+import type { Task, TaskStatus, Activity } from '../../types';
 import { format } from 'date-fns';
 
 export function TaskList() {
   const navigate = useNavigate();
-  const { tasks, addTask, updateTask, deleteTask } = useTaskStore();
+  const { tasks, addTask, updateTask, deleteTask, toggleActivityCompleted } = useTaskStore();
   const { projects, addProject } = useProjectStore();
   const { customers } = useCustomerStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -198,6 +198,38 @@ export function TaskList() {
     }
   });
 
+  // ネクストアクション（タスクの未完了活動を収集）
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+
+  interface NextAction {
+    activity: Activity;
+    taskId: string;
+    taskName: string;
+    customerName?: string;
+  }
+
+  const nextActions: NextAction[] = [];
+
+  tasks.forEach((task) => {
+    const customerName = getCustomerName(task);
+
+    (task.activities || []).forEach((activity) => {
+      if (!activity.completed && activity.date >= todayStr) {
+        nextActions.push({
+          activity,
+          taskId: task.id,
+          taskName: task.name,
+          customerName: customerName || undefined,
+        });
+      }
+    });
+  });
+
+  // 日付順にソートして最大5件
+  const sortedNextActions = nextActions
+    .sort((a, b) => new Date(a.activity.date).getTime() - new Date(b.activity.date).getTime())
+    .slice(0, 5);
+
   return (
     <div className="h-full flex flex-col">
       <Header
@@ -207,6 +239,55 @@ export function TaskList() {
         }
       />
       <div className="flex-1 p-6 overflow-auto">
+        {/* ネクストアクション */}
+        {sortedNextActions.length > 0 && (
+          <Card className="mb-4">
+            <CardBody>
+              <h3 className="font-medium text-sm mb-3 flex items-center gap-2">
+                <span>📅</span>
+                ネクストアクション
+              </h3>
+              <div className="space-y-2">
+                {sortedNextActions.map((item) => (
+                  <div
+                    key={`${item.taskId}-${item.activity.id}`}
+                    className="flex items-center gap-3 p-2 rounded-md bg-blue-50 border border-blue-100"
+                  >
+                    <button
+                      onClick={async () => {
+                        await toggleActivityCompleted(item.taskId, item.activity.id);
+                      }}
+                      className="text-lg flex-shrink-0 hover:scale-110 transition-transform"
+                      title="完了にする"
+                    >
+                      ☐
+                    </button>
+                    <span className="text-base flex-shrink-0">{ACTIVITY_TYPE_ICONS[item.activity.type]}</span>
+                    <div className="flex-1 min-w-0 flex items-center gap-2">
+                      <span className="text-xs font-medium text-blue-600">
+                        {format(new Date(item.activity.date), 'M/d')}
+                      </span>
+                      <Badge variant="default">{ACTIVITY_TYPE_LABELS[item.activity.type]}</Badge>
+                      <span className="text-sm text-[var(--color-text)] truncate">
+                        {item.activity.content}
+                      </span>
+                      <span className="text-xs text-[var(--color-text-muted)] flex-shrink-0">
+                        - {item.customerName && `${item.customerName}/`}{item.taskName}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => navigate(`/tasks/${item.taskId}`)}
+                      className="text-xs text-[var(--color-primary)] hover:underline flex-shrink-0"
+                    >
+                      詳細
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </CardBody>
+          </Card>
+        )}
+
         {/* フィルター & ビュー切り替え */}
         <div className="flex justify-between items-center mb-4">
           <div className="flex gap-4 items-center">

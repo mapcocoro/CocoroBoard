@@ -2,14 +2,15 @@ import { useNavigate } from 'react-router-dom';
 import { Header } from './layout/Header';
 import { Card, CardHeader, CardBody, Badge } from './common';
 import { useCustomerStore, useProjectStore, useTaskStore, useInvoiceStore } from '../stores';
-import { PROJECT_STATUS_LABELS, TASK_PRIORITY_LABELS } from '../types';
+import { PROJECT_STATUS_LABELS, TASK_PRIORITY_LABELS, ACTIVITY_TYPE_ICONS, ACTIVITY_TYPE_LABELS } from '../types';
+import type { Activity } from '../types';
 import { format, isAfter, isBefore, addDays } from 'date-fns';
 
 export function Dashboard() {
   const navigate = useNavigate();
   const { customers } = useCustomerStore();
-  const { projects } = useProjectStore();
-  const { tasks } = useTaskStore();
+  const { projects, toggleActivityCompleted: toggleProjectActivityCompleted } = useProjectStore();
+  const { tasks, toggleActivityCompleted: toggleTaskActivityCompleted } = useTaskStore();
   const { invoices } = useInvoiceStore();
 
   const today = new Date();
@@ -46,6 +47,59 @@ export function Dashboard() {
       return isAfter(dueDate, today) && isBefore(dueDate, weekLater);
     })
     .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime());
+
+  // ネクストアクション（未完了の活動）
+  const todayStr = format(today, 'yyyy-MM-dd');
+
+  interface NextAction {
+    activity: Activity;
+    sourceType: 'task' | 'project';
+    sourceId: string;
+    sourceName: string;
+    customerName?: string;
+  }
+
+  const nextActions: NextAction[] = [];
+
+  // タスクの活動を収集
+  tasks.forEach((task) => {
+    const project = projects.find(p => p.id === task.projectId);
+    const customer = project ? customers.find(c => c.id === project.customerId) : null;
+
+    (task.activities || []).forEach((activity) => {
+      if (!activity.completed && activity.date >= todayStr) {
+        nextActions.push({
+          activity,
+          sourceType: 'task',
+          sourceId: task.id,
+          sourceName: task.name,
+          customerName: customer?.name,
+        });
+      }
+    });
+  });
+
+  // プロジェクトの活動を収集
+  projects.forEach((project) => {
+    const customer = customers.find(c => c.id === project.customerId);
+
+    (project.activities || []).forEach((activity) => {
+      if (!activity.completed && activity.date >= todayStr) {
+        nextActions.push({
+          activity,
+          sourceType: 'project',
+          sourceId: project.id,
+          sourceName: project.name,
+          customerName: customer?.name,
+        });
+      }
+    });
+  });
+
+  // 日付順にソートして最大10件
+  const sortedNextActions = nextActions
+    .sort((a, b) => new Date(a.activity.date).getTime() - new Date(b.activity.date).getTime())
+    .slice(0, 10);
 
   // 売上サマリー
   const getTotalWithTax = (inv: { amount: number; tax?: number }) => inv.amount + (inv.tax || 0);
@@ -212,6 +266,72 @@ export function Dashboard() {
             </CardBody>
           </Card>
         </div>
+
+        {/* ネクストアクション */}
+        <Card className="mt-6">
+          <CardHeader>
+            <h3 className="font-medium flex items-center gap-2">
+              <span>📅</span>
+              ネクストアクション
+            </h3>
+          </CardHeader>
+          <CardBody>
+            {sortedNextActions.length === 0 ? (
+              <p className="text-sm text-[var(--color-text-muted)] text-center py-4">
+                予定されているアクションはありません
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {sortedNextActions.map((item) => (
+                  <div
+                    key={`${item.sourceType}-${item.sourceId}-${item.activity.id}`}
+                    className="flex items-center gap-3 p-3 rounded-md bg-blue-50 border border-blue-100 hover:bg-blue-100 transition-colors"
+                  >
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (item.sourceType === 'task') {
+                          await toggleTaskActivityCompleted(item.sourceId, item.activity.id);
+                        } else {
+                          await toggleProjectActivityCompleted(item.sourceId, item.activity.id);
+                        }
+                      }}
+                      className="text-xl flex-shrink-0 hover:scale-110 transition-transform"
+                      title="完了にする"
+                    >
+                      ☐
+                    </button>
+                    <span className="text-lg flex-shrink-0">{ACTIVITY_TYPE_ICONS[item.activity.type]}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-blue-600">
+                          {format(new Date(item.activity.date), 'M/d')}
+                        </span>
+                        <Badge variant="default">{ACTIVITY_TYPE_LABELS[item.activity.type]}</Badge>
+                        <span className="text-xs text-[var(--color-text-muted)]">
+                          {item.customerName && `${item.customerName} / `}{item.sourceName}
+                        </span>
+                      </div>
+                      <p className="text-sm text-[var(--color-text)] truncate mt-1">
+                        {item.activity.content}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => navigate(
+                        item.sourceType === 'task'
+                          ? `/tasks/${item.sourceId}`
+                          : `/projects/${item.sourceId}`
+                      )}
+                      className="text-xs text-[var(--color-primary)] hover:underline flex-shrink-0"
+                    >
+                      詳細 →
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardBody>
+        </Card>
 
         {/* 進行中案件一覧 */}
         <Card className="mt-6">

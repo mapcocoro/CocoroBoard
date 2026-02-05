@@ -75,8 +75,9 @@ interface TaskState {
   getTasksByProject: (projectId: string) => Task[];
   getTasksByStatus: (status: TaskStatus) => Task[];
   moveTask: (id: string, status: TaskStatus) => Promise<void>;
-  addActivity: (taskId: string, type: ActivityType, content: string) => Promise<void>;
+  addActivity: (taskId: string, type: ActivityType, content: string, date?: string) => Promise<void>;
   removeActivity: (taskId: string, activityId: string) => Promise<void>;
+  toggleActivityCompleted: (taskId: string, activityId: string) => Promise<void>;
 }
 
 export const useTaskStore = create<TaskState>((set, get) => ({
@@ -181,15 +182,16 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     await get().updateTask(id, { status });
   },
 
-  addActivity: async (taskId, type, content) => {
+  addActivity: async (taskId, type, content, date) => {
     const task = get().tasks.find(t => t.id === taskId);
     if (!task) return;
 
     const newActivity: Activity = {
       id: crypto.randomUUID(),
-      date: new Date().toISOString().split('T')[0],
+      date: date || new Date().toISOString().split('T')[0],
       type,
       content,
+      completed: false,
       createdAt: new Date().toISOString(),
     };
 
@@ -202,6 +204,16 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     if (!task) return;
 
     const activities = (task.activities || []).filter(a => a.id !== activityId);
+    await get().updateTask(taskId, { activities });
+  },
+
+  toggleActivityCompleted: async (taskId, activityId) => {
+    const task = get().tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const activities = (task.activities || []).map(a =>
+      a.id === activityId ? { ...a, completed: !a.completed } : a
+    );
     await get().updateTask(taskId, { activities });
   },
 }));
