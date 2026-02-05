@@ -83,7 +83,11 @@ export function TaskList() {
 
   const handleCreate = async (data: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>, customerId?: string) => {
     const projectId = await getOrCreateProjectForCustomer(customerId);
-    await addTask({ ...data, projectId });
+    // 顧客タスクかどうか判定（自社カテゴリでなければ顧客タスク）
+    const isCustomerTask = customerId
+      ? !isSelfCategory(customers.find(c => c.id === customerId)?.name || '')
+      : false;
+    await addTask({ ...data, projectId }, isCustomerTask);
     setIsModalOpen(false);
   };
 

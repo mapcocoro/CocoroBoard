@@ -3,9 +3,10 @@ import type { Task, TaskStatus, Activity, ActivityType } from '../types';
 import { supabase } from '../services/supabase';
 
 // タスク番号を生成
-function generateTaskNumber(tasks: Task[]): string {
+// isCustomer: true=顧客タスク(T2026-XXX), false=自社タスク(DEV2026-XXX)
+function generateTaskNumber(tasks: Task[], isCustomer: boolean): string {
   const year = new Date().getFullYear();
-  const prefix = `T${year}-`;
+  const prefix = isCustomer ? `T${year}-` : `DEV${year}-`;
 
   const matchingNumbers = tasks
     .filter(t => t.taskNumber?.startsWith(prefix))
@@ -67,7 +68,7 @@ interface TaskState {
   isLoading: boolean;
 
   loadTasks: () => Promise<void>;
-  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Task>;
+  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>, isCustomer?: boolean) => Promise<Task>;
   updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   selectTask: (id: string | null) => void;
@@ -100,8 +101,8 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     set({ tasks, isLoading: false });
   },
 
-  addTask: async (taskData) => {
-    const taskNumber = taskData.taskNumber || generateTaskNumber(get().tasks);
+  addTask: async (taskData, isCustomer = true) => {
+    const taskNumber = taskData.taskNumber || generateTaskNumber(get().tasks, isCustomer);
 
     const { data, error } = await supabase
       .from('tasks')
