@@ -19,6 +19,18 @@ export function TaskList() {
   const [filterStatus, setFilterStatus] = useState<TaskStatus | 'all'>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [viewMode, setViewMode] = useViewMode('tasks', 'list');
+  const [sortKey, setSortKey] = useState<'id' | 'name' | 'category' | 'status' | 'priority' | 'dueDate'>('status');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  // ソートヘッダークリック
+  const handleSort = (key: typeof sortKey) => {
+    if (sortKey === key) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortOrder('asc');
+    }
+  };
 
   // 自社系カテゴリかどうかを判定
   const isSelfCategory = (name: string) => {
@@ -154,13 +166,32 @@ export function TaskList() {
           });
 
   const sortedTasks = [...filteredTasks].sort((a, b) => {
-    const priorityOrder = { high: 0, medium: 1, low: 2 };
-    const statusOrder = { todo: 0, in_progress: 1, done: 2 };
+    const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
+    const statusOrder: Record<string, number> = { todo: 0, in_progress: 1, done: 2 };
+    const multiplier = sortOrder === 'asc' ? 1 : -1;
 
-    if (statusOrder[a.status] !== statusOrder[b.status]) {
-      return statusOrder[a.status] - statusOrder[b.status];
+    switch (sortKey) {
+      case 'id':
+        return multiplier * (a.taskNumber || '').localeCompare(b.taskNumber || '');
+      case 'name':
+        return multiplier * a.name.localeCompare(b.name);
+      case 'category': {
+        const catA = getCustomerName(a) || '';
+        const catB = getCustomerName(b) || '';
+        return multiplier * catA.localeCompare(catB);
+      }
+      case 'status':
+        return multiplier * (statusOrder[a.status] - statusOrder[b.status]);
+      case 'priority':
+        return multiplier * (priorityOrder[a.priority] - priorityOrder[b.priority]);
+      case 'dueDate': {
+        const dateA = a.dueDate || '9999-12-31';
+        const dateB = b.dueDate || '9999-12-31';
+        return multiplier * dateA.localeCompare(dateB);
+      }
+      default:
+        return 0;
     }
-    return priorityOrder[a.priority] - priorityOrder[b.priority];
   });
 
   return (
@@ -316,12 +347,29 @@ export function TaskList() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-[var(--color-border)] bg-[var(--color-bg-hover)]">
-                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)] whitespace-nowrap">ID</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)]">タスク名</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)] whitespace-nowrap">カテゴリ</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)] whitespace-nowrap">ステータス</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)] whitespace-nowrap">優先度</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)] whitespace-nowrap">期限</th>
+                  {([
+                    { key: 'id', label: 'ID' },
+                    { key: 'name', label: 'タスク名' },
+                    { key: 'category', label: 'カテゴリ' },
+                    { key: 'status', label: 'ステータス' },
+                    { key: 'priority', label: '優先度' },
+                    { key: 'dueDate', label: '期限' },
+                  ] as const).map(({ key, label }) => (
+                    <th
+                      key={key}
+                      onClick={() => handleSort(key)}
+                      className="text-left px-4 py-3 text-sm font-medium text-[var(--color-text-muted)] whitespace-nowrap cursor-pointer hover:bg-gray-100 select-none"
+                    >
+                      <span className="flex items-center gap-1">
+                        {label}
+                        {sortKey === key && (
+                          <span className="text-[var(--color-primary)]">
+                            {sortOrder === 'asc' ? '▲' : '▼'}
+                          </span>
+                        )}
+                      </span>
+                    </th>
+                  ))}
                   <th className="w-20"></th>
                 </tr>
               </thead>
