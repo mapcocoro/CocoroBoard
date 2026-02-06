@@ -196,8 +196,23 @@ export function TaskDetail() {
               )}
               {task.domainInfo && (
                 <>
-                  <dt className="text-[var(--color-text-muted)]">ドメイン</dt>
-                  <dd>{task.domainInfo}</dd>
+                  <dt className="text-[var(--color-text-muted)]">ドメインメモ</dt>
+                  <dd className="whitespace-pre-wrap">{task.domainInfo}</dd>
+                </>
+              )}
+              {task.aiConsultUrl && (
+                <>
+                  <dt className="text-[var(--color-text-muted)]">AI相談URL</dt>
+                  <dd>
+                    <a
+                      href={task.aiConsultUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[var(--color-primary)] hover:underline break-all"
+                    >
+                      {task.aiConsultUrl}
+                    </a>
+                  </dd>
                 </>
               )}
               {task.codeFolder && (

@@ -85,7 +85,8 @@ export interface Task {
   priority: TaskPriority;
   dueDate?: string;
   // 追加フィールド
-  domainInfo?: string;       // ドメイン情報
+  domainInfo?: string;       // ドメインメモ（ID/PW等）
+  aiConsultUrl?: string;     // AI相談URL
   codeFolder?: string;       // コードフォルダ
   meetingFolder?: string;    // 打合せフォルダ
   contractFolder?: string;   // 契約書フォルダ

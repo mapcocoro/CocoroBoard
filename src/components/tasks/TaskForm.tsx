@@ -35,6 +35,7 @@ export function TaskForm({ task, projectId, onSubmit, onCancel }: TaskFormProps)
     priority: 'medium' as TaskPriority,
     dueDate: '',
     domainInfo: '',
+    aiConsultUrl: '',
     codeFolder: '',
     meetingFolder: '',
     contractFolder: '',
@@ -65,6 +66,7 @@ export function TaskForm({ task, projectId, onSubmit, onCancel }: TaskFormProps)
         priority: task.priority,
         dueDate: task.dueDate || '',
         domainInfo: task.domainInfo || '',
+        aiConsultUrl: task.aiConsultUrl || '',
         codeFolder: task.codeFolder || '',
         meetingFolder: task.meetingFolder || '',
         contractFolder: task.contractFolder || '',
@@ -156,10 +158,16 @@ export function TaskForm({ task, projectId, onSubmit, onCancel }: TaskFormProps)
         placeholder="タスクの詳細・メモ"
       />
       <Input
-        label="ドメイン"
+        label="ドメインメモ"
         value={formData.domainInfo}
         onChange={(e) => setFormData({ ...formData, domainInfo: e.target.value })}
-        placeholder="example.com"
+        placeholder="example.com / ID: xxx / PW: xxx"
+      />
+      <Input
+        label="AI相談URL"
+        value={formData.aiConsultUrl}
+        onChange={(e) => setFormData({ ...formData, aiConsultUrl: e.target.value })}
+        placeholder="https://claude.ai/chat/xxx"
       />
       <Input
         label="コードフォルダ"
