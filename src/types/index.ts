@@ -87,6 +87,8 @@ export interface Task {
   // 追加フィールド
   domainInfo?: string;       // ドメインメモ（ID/PW等）
   aiConsultUrl?: string;     // AI相談URL
+  githubUrl?: string;        // GitHub URL
+  usedServices?: string[];   // 使用サービス
   codeFolder?: string;       // コードフォルダ
   meetingFolder?: string;    // 打合せフォルダ
   contractFolder?: string;   // 契約書フォルダ

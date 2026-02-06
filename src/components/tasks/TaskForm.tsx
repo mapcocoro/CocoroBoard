@@ -36,6 +36,8 @@ export function TaskForm({ task, projectId, onSubmit, onCancel }: TaskFormProps)
     dueDate: '',
     domainInfo: '',
     aiConsultUrl: '',
+    githubUrl: '',
+    usedServices: [] as string[],
     codeFolder: '',
     meetingFolder: '',
     contractFolder: '',
@@ -67,6 +69,8 @@ export function TaskForm({ task, projectId, onSubmit, onCancel }: TaskFormProps)
         dueDate: task.dueDate || '',
         domainInfo: task.domainInfo || '',
         aiConsultUrl: task.aiConsultUrl || '',
+        githubUrl: task.githubUrl || '',
+        usedServices: task.usedServices || [],
         codeFolder: task.codeFolder || '',
         meetingFolder: task.meetingFolder || '',
         contractFolder: task.contractFolder || '',
@@ -169,6 +173,45 @@ export function TaskForm({ task, projectId, onSubmit, onCancel }: TaskFormProps)
         onChange={(e) => setFormData({ ...formData, aiConsultUrl: e.target.value })}
         placeholder="https://claude.ai/chat/xxx"
       />
+      <Input
+        label="GitHub URL"
+        value={formData.githubUrl}
+        onChange={(e) => setFormData({ ...formData, githubUrl: e.target.value })}
+        placeholder="https://github.com/mapcocoro/..."
+      />
+      <div>
+        <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+          使用サービス
+        </label>
+        <div className="flex flex-wrap gap-3">
+          {[
+            { id: 'github', label: 'GitHub (mapcocoro)' },
+            { id: 'firebase', label: 'Firebase' },
+            { id: 'cloudrun', label: 'Google Cloud Run' },
+            { id: 'vercel', label: 'Vercel (mapcocoro)' },
+            { id: 'supabase', label: 'Supabase' },
+            { id: 'microcms', label: 'MicroCMS' },
+            { id: 'payloadcms', label: 'PayloadCMS' },
+            { id: 'square', label: 'Square' },
+            { id: 'lightwidget', label: 'LightWidget' },
+          ].map((service) => (
+            <label key={service.id} className="flex items-center gap-1.5 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.usedServices.includes(service.id)}
+                onChange={(e) => {
+                  const newServices = e.target.checked
+                    ? [...formData.usedServices, service.id]
+                    : formData.usedServices.filter((s) => s !== service.id);
+                  setFormData({ ...formData, usedServices: newServices });
+                }}
+                className="rounded border-gray-300"
+              />
+              {service.label}
+            </label>
+          ))}
+        </div>
+      </div>
       <Input
         label="コードフォルダ"
         value={formData.codeFolder}

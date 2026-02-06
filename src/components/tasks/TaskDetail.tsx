@@ -215,6 +215,46 @@ export function TaskDetail() {
                   </dd>
                 </>
               )}
+              {task.githubUrl && (
+                <>
+                  <dt className="text-[var(--color-text-muted)]">GitHub</dt>
+                  <dd>
+                    <a
+                      href={task.githubUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[var(--color-primary)] hover:underline break-all"
+                    >
+                      {task.githubUrl}
+                    </a>
+                  </dd>
+                </>
+              )}
+              {task.usedServices && task.usedServices.length > 0 && (
+                <>
+                  <dt className="text-[var(--color-text-muted)]">使用サービス</dt>
+                  <dd className="flex flex-wrap gap-1">
+                    {task.usedServices.map((s) => {
+                      const labels: Record<string, string> = {
+                        github: 'GitHub',
+                        firebase: 'Firebase',
+                        cloudrun: 'Cloud Run',
+                        vercel: 'Vercel',
+                        supabase: 'Supabase',
+                        microcms: 'MicroCMS',
+                        payloadcms: 'PayloadCMS',
+                        square: 'Square',
+                        lightwidget: 'LightWidget',
+                      };
+                      return (
+                        <span key={s} className="bg-gray-100 text-xs px-2 py-0.5 rounded">
+                          {labels[s] || s}
+                        </span>
+                      );
+                    })}
+                  </dd>
+                </>
+              )}
               {task.codeFolder && (
                 <>
                   <dt className="text-[var(--color-text-muted)]">コードフォルダ</dt>
