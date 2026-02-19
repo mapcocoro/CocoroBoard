@@ -199,8 +199,6 @@ export function TaskList() {
   });
 
   // ネクストアクション（タスクの未完了活動を収集）
-  const todayStr = format(new Date(), 'yyyy-MM-dd');
-
   interface NextAction {
     activity: Activity;
     taskId: string;
@@ -214,7 +212,7 @@ export function TaskList() {
     const customerName = getCustomerName(task);
 
     (task.activities || []).forEach((activity) => {
-      if (!activity.completed && activity.date >= todayStr) {
+      if (!activity.completed) {
         nextActions.push({
           activity,
           taskId: task.id,
@@ -225,10 +223,9 @@ export function TaskList() {
     });
   });
 
-  // 日付順にソートして最大5件
+  // 日付順にソート
   const sortedNextActions = nextActions
-    .sort((a, b) => new Date(a.activity.date).getTime() - new Date(b.activity.date).getTime())
-    .slice(0, 5);
+    .sort((a, b) => new Date(a.activity.date).getTime() - new Date(b.activity.date).getTime());
 
   return (
     <div className="h-full flex flex-col">
