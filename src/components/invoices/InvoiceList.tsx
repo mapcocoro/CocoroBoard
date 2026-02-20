@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Header } from '../layout/Header';
 import { Button, Modal, Badge, EmptyState, ConfirmDialog, Card, CardBody, useViewMode } from '../common';
 import { InvoiceForm } from './InvoiceForm';
@@ -16,6 +16,56 @@ export function InvoiceList() {
   const [deleteTarget, setDeleteTarget] = useState<Invoice | null>(null);
   const [filterStatus, setFilterStatus] = useState<InvoiceStatus | 'all'>('all');
   const [viewMode, setViewMode] = useViewMode('invoices', 'list');
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [salesBasis, setSalesBasis] = useState<'issue' | 'paid'>('issue');
+
+  const availableYears = useMemo(() => {
+    const years = new Set<number>([currentYear]);
+    invoices.forEach((inv) => {
+      years.add(new Date(inv.issueDate).getFullYear());
+      if (inv.paidDate) years.add(new Date(inv.paidDate).getFullYear());
+    });
+    return [...years].sort((a, b) => b - a);
+  }, [invoices, currentYear]);
+
+  const monthlyData = useMemo(() => {
+    return Array.from({ length: 12 }, (_, i) => {
+      const month = i + 1;
+      if (salesBasis === 'issue') {
+        const monthInvoices = invoices.filter((inv) => {
+          const d = new Date(inv.issueDate);
+          return d.getFullYear() === selectedYear && d.getMonth() + 1 === month;
+        });
+        const amountExTax = monthInvoices.reduce((s, inv) => s + inv.amount, 0);
+        const amountWithTax = monthInvoices.reduce((s, inv) => s + inv.amount + (inv.tax || 0), 0);
+        const paidWithTax = monthInvoices
+          .filter((inv) => inv.status === 'paid')
+          .reduce((s, inv) => s + inv.amount + (inv.tax || 0), 0);
+        const unpaidWithTax = monthInvoices
+          .filter((inv) => inv.status !== 'paid' && inv.status !== 'cancelled')
+          .reduce((s, inv) => s + inv.amount + (inv.tax || 0), 0);
+        return { month, count: monthInvoices.length, amountExTax, amountWithTax, paidWithTax, unpaidWithTax };
+      } else {
+        const monthInvoices = invoices.filter((inv) => {
+          if (!inv.paidDate || inv.status !== 'paid') return false;
+          const d = new Date(inv.paidDate);
+          return d.getFullYear() === selectedYear && d.getMonth() + 1 === month;
+        });
+        const amountExTax = monthInvoices.reduce((s, inv) => s + inv.amount, 0);
+        const amountWithTax = monthInvoices.reduce((s, inv) => s + inv.amount + (inv.tax || 0), 0);
+        return { month, count: monthInvoices.length, amountExTax, amountWithTax, paidWithTax: amountWithTax, unpaidWithTax: 0 };
+      }
+    });
+  }, [invoices, selectedYear, salesBasis]);
+
+  const monthlyTotals = useMemo(() => ({
+    count: monthlyData.reduce((s, m) => s + m.count, 0),
+    amountExTax: monthlyData.reduce((s, m) => s + m.amountExTax, 0),
+    amountWithTax: monthlyData.reduce((s, m) => s + m.amountWithTax, 0),
+    paidWithTax: monthlyData.reduce((s, m) => s + m.paidWithTax, 0),
+    unpaidWithTax: monthlyData.reduce((s, m) => s + m.unpaidWithTax, 0),
+  }), [monthlyData]);
 
   const handleCreate = (data: Omit<Invoice, 'id' | 'createdAt' | 'updatedAt'>) => {
     addInvoice(data);
@@ -126,6 +176,110 @@ export function InvoiceList() {
             <p className="text-xs text-[var(--color-text-muted)]">
               （税込 ¥{unpaidAmountWithTax.toLocaleString()}）
             </p>
+          </div>
+        </div>
+
+        {/* 年次売上サマリー */}
+        <div className="bg-white border border-[var(--color-border)] rounded-lg mb-6 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-bg-hover)]">
+            <h2 className="text-sm font-semibold text-[var(--color-text)]">年次売上サマリー</h2>
+            <div className="flex items-center gap-3">
+              {/* 発行日 / 入金日 切り替え */}
+              <div className="flex border border-[var(--color-border)] rounded-md overflow-hidden text-xs">
+                <button
+                  onClick={() => setSalesBasis('issue')}
+                  className={`px-3 py-1.5 transition-colors ${salesBasis === 'issue' ? 'bg-[var(--color-primary)] text-white' : 'bg-white text-[var(--color-text-muted)] hover:bg-gray-50'}`}
+                >
+                  発行日基準
+                </button>
+                <button
+                  onClick={() => setSalesBasis('paid')}
+                  className={`px-3 py-1.5 transition-colors ${salesBasis === 'paid' ? 'bg-[var(--color-primary)] text-white' : 'bg-white text-[var(--color-text-muted)] hover:bg-gray-50'}`}
+                >
+                  入金日基準
+                </button>
+              </div>
+              {/* 年選択 */}
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                className="text-sm border border-[var(--color-border)] rounded-md px-2 py-1 bg-white text-[var(--color-text)]"
+              >
+                {availableYears.map((y) => (
+                  <option key={y} value={y}>{y}年</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[var(--color-border)]">
+                  <th className="text-left px-4 py-2 font-medium text-[var(--color-text-muted)]">月</th>
+                  <th className="text-right px-4 py-2 font-medium text-[var(--color-text-muted)]">件数</th>
+                  <th className="text-right px-4 py-2 font-medium text-[var(--color-text-muted)]">
+                    {salesBasis === 'issue' ? '請求額（税抜）' : '入金額（税抜）'}
+                  </th>
+                  <th className="text-right px-4 py-2 font-medium text-[var(--color-text-muted)]">
+                    {salesBasis === 'issue' ? '請求額（税込）' : '入金額（税込）'}
+                  </th>
+                  {salesBasis === 'issue' && (
+                    <>
+                      <th className="text-right px-4 py-2 font-medium text-[var(--color-text-muted)]">入金済（税込）</th>
+                      <th className="text-right px-4 py-2 font-medium text-[var(--color-text-muted)]">未入金（税込）</th>
+                    </>
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {monthlyData.map((row) => (
+                  <tr
+                    key={row.month}
+                    className={`border-b border-[var(--color-border)] last:border-b-0 ${row.count === 0 ? 'text-[var(--color-text-muted)]' : 'hover:bg-[var(--color-bg-hover)]'}`}
+                  >
+                    <td className="px-4 py-2">{row.month}月</td>
+                    <td className="text-right px-4 py-2">{row.count > 0 ? row.count : '-'}</td>
+                    <td className="text-right px-4 py-2">
+                      {row.amountExTax > 0 ? `¥${row.amountExTax.toLocaleString()}` : '-'}
+                    </td>
+                    <td className="text-right px-4 py-2 font-medium">
+                      {row.amountWithTax > 0 ? `¥${row.amountWithTax.toLocaleString()}` : '-'}
+                    </td>
+                    {salesBasis === 'issue' && (
+                      <>
+                        <td className="text-right px-4 py-2 text-green-600">
+                          {row.paidWithTax > 0 ? `¥${row.paidWithTax.toLocaleString()}` : '-'}
+                        </td>
+                        <td className="text-right px-4 py-2 text-orange-500">
+                          {row.unpaidWithTax > 0 ? `¥${row.unpaidWithTax.toLocaleString()}` : '-'}
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                ))}
+                {/* 合計行 */}
+                <tr className="bg-[var(--color-bg-hover)] font-semibold border-t-2 border-[var(--color-border)]">
+                  <td className="px-4 py-2">合計</td>
+                  <td className="text-right px-4 py-2">{monthlyTotals.count > 0 ? monthlyTotals.count : '-'}</td>
+                  <td className="text-right px-4 py-2">
+                    {monthlyTotals.amountExTax > 0 ? `¥${monthlyTotals.amountExTax.toLocaleString()}` : '-'}
+                  </td>
+                  <td className="text-right px-4 py-2">
+                    {monthlyTotals.amountWithTax > 0 ? `¥${monthlyTotals.amountWithTax.toLocaleString()}` : '-'}
+                  </td>
+                  {salesBasis === 'issue' && (
+                    <>
+                      <td className="text-right px-4 py-2 text-green-600">
+                        {monthlyTotals.paidWithTax > 0 ? `¥${monthlyTotals.paidWithTax.toLocaleString()}` : '-'}
+                      </td>
+                      <td className="text-right px-4 py-2 text-orange-500">
+                        {monthlyTotals.unpaidWithTax > 0 ? `¥${monthlyTotals.unpaidWithTax.toLocaleString()}` : '-'}
+                      </td>
+                    </>
+                  )}
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
