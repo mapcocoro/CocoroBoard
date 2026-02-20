@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Header } from '../layout/Header';
 import { Button, Modal, Badge, EmptyState, ConfirmDialog, Card, CardBody, useViewMode } from '../common';
 import { InvoiceForm } from './InvoiceForm';
@@ -66,6 +67,27 @@ export function InvoiceList() {
     paidWithTax: monthlyData.reduce((s, m) => s + m.paidWithTax, 0),
     unpaidWithTax: monthlyData.reduce((s, m) => s + m.unpaidWithTax, 0),
   }), [monthlyData]);
+
+  // グラフ用データ（請求：発行日基準、入金：入金日基準で別々に集計）
+  const chartData = useMemo(() => {
+    return Array.from({ length: 12 }, (_, i) => {
+      const month = i + 1;
+      const invoicedAmount = invoices
+        .filter((inv) => {
+          const d = new Date(inv.issueDate);
+          return d.getFullYear() === selectedYear && d.getMonth() + 1 === month;
+        })
+        .reduce((s, inv) => s + inv.amount + (inv.tax || 0), 0);
+      const paidAmount = invoices
+        .filter((inv) => {
+          if (!inv.paidDate || inv.status !== 'paid') return false;
+          const d = new Date(inv.paidDate);
+          return d.getFullYear() === selectedYear && d.getMonth() + 1 === month;
+        })
+        .reduce((s, inv) => s + inv.amount + (inv.tax || 0), 0);
+      return { name: `${month}月`, 請求額: invoicedAmount, 入金額: paidAmount };
+    });
+  }, [invoices, selectedYear]);
 
   const handleCreate = (data: Omit<Invoice, 'id' | 'createdAt' | 'updatedAt'>) => {
     addInvoice(data);
@@ -211,6 +233,31 @@ export function InvoiceList() {
               </select>
             </div>
           </div>
+          {/* 棒グラフ */}
+          <div className="px-4 py-4 border-b border-[var(--color-border)]">
+            <p className="text-xs text-[var(--color-text-muted)] mb-3">請求額：発行日基準　／　入金額：入金日基準（税込）</p>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={chartData} margin={{ top: 0, right: 16, left: 8, bottom: 0 }} barCategoryGap="30%">
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
+                <YAxis
+                  tickFormatter={(v: number) => v === 0 ? '0' : `${(v / 10000).toFixed(0)}万`}
+                  tick={{ fontSize: 11, fill: '#6b7280' }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={40}
+                />
+                <Tooltip
+                  formatter={(value: number | undefined, name: string | undefined) => [`¥${(value ?? 0).toLocaleString()}`, name ?? '']}
+                  contentStyle={{ fontSize: 12, borderRadius: 6, border: '1px solid #e5e7eb' }}
+                />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Bar dataKey="請求額" fill="#2563eb" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="入金額" fill="#16a34a" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
