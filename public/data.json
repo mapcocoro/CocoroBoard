@@ -1,0 +1,716 @@
+{
+  "generated": "2026-03-31T07:11:27.538Z",
+  "clients": [
+    {
+      "id": "tenohira",
+      "name": "てのひら整骨院",
+      "category": "クライアント",
+      "industry": "整骨院",
+      "contact": {
+        "name": "",
+        "phone": "",
+        "email": "",
+        "line": ""
+      },
+      "referral": "",
+      "project": {
+        "type": "HP制作",
+        "status": "制作中（写真待ち）",
+        "deadline": "2026-03-31",
+        "tech": "Next.js, Tailwind, Firebase Hosting",
+        "url": "https://tenohira-seikotsu.web.app"
+      },
+      "billing": {
+        "amount": "",
+        "status": ""
+      },
+      "drive": {
+        "files": "_⭐️【クライアント】打ち合わせ中ファイル/【てのひら整骨院様】2512HP制作/",
+        "contracts": "_⭐️【クライアント】契約書、請求書、領収書/2601てのひら整骨院/"
+      },
+      "code": "/Users/runa/projects/◆client/てのひら/tenohira_v3/"
+    },
+    {
+      "id": "ryu-no-kiseki",
+      "name": "龍の奇跡（印西市商工会・藤村様）",
+      "category": "クライアント",
+      "industry": "商工会・日本酒プロジェクト",
+      "contact": {
+        "name": "藤村 和範",
+        "phone": "0476-42-2750",
+        "fax": "0476-42-7379",
+        "email": "inshoko@maple.ocn.ne.jp",
+        "address": "〒270-1327 千葉県印西市大森3934-4"
+      },
+      "referral": "印西市商工会",
+      "project": {
+        "type": "LP制作",
+        "status": "デプロイ済み・ギャラリー提案中",
+        "deadline": "2026-03-25（納品済み）",
+        "tech": "HTML/CSS/JS, Firebase Hosting, microCMS",
+        "url": "https://inz-ryu.jp"
+      },
+      "billing": {
+        "amount": 121000,
+        "status": "請求済み",
+        "invoice_date": "2026-03-24",
+        "due_date": "2026-04-30"
+      },
+      "drive": {
+        "files": "_⭐️【クライアント】打ち合わせ中ファイル/【商工会藤村様】2511日本酒PJTデータ/",
+        "contracts": "_⭐️【クライアント】契約書、請求書、領収書/2511商工会日本酒PJT様/"
+      },
+      "code": "/Users/runa/projects/◆client/新・商工会日本酒/"
+    },
+    {
+      "id": "inzai-city",
+      "name": "印西市経済振興課",
+      "category": "クライアント（見込み）",
+      "industry": "自治体",
+      "contact": {
+        "name": "川手（商工振興係）",
+        "phone": "0476-33-4483（直通）",
+        "fax": "0476-42-7242（代表）",
+        "email": "syoukanka@city.inzai.chiba.jp",
+        "address": "〒270-1396 千葉県印西市大森2364-2（印西市 環境経済部 経済振興課）"
+      },
+      "referral": "創業実践プログラム",
+      "project": {
+        "type": "セミナー講演 → 追加提案中",
+        "status": "反応待ち"
+      },
+      "drive": {
+        "files": "_⭐️【クライアント】打ち合わせ中ファイル/【印西市市役所経済振興課】2512講演会/",
+        "contracts": "_⭐️【クライアント】契約書、請求書、領収書/2512印西市経済振興課セミナー/"
+      }
+    },
+    {
+      "id": "takasugi",
+      "name": "高杉様",
+      "category": "クライアント（失注）",
+      "contact": {
+        "name": "高杉様"
+      },
+      "project": {
+        "type": "HP制作",
+        "status": "失注"
+      },
+      "drive": {
+        "files": "_⭐️【クライアント】打ち合わせ中ファイル/【2512高杉様】HP制作依頼.gsheet"
+      }
+    },
+    {
+      "id": "usui-tax",
+      "name": "薄井税理士事務所",
+      "category": "クライアント",
+      "industry": "税理士事務所",
+      "contact": {
+        "name": "薄井様",
+        "email": "usuitax@gmail.com"
+      },
+      "project": {
+        "type": "HP制作 & 名刺制作",
+        "status": "納品完了"
+      },
+      "billing": {
+        "amount": 176000,
+        "status": "入金済み"
+      },
+      "drive": {
+        "files": "_⭐️【クライアント】打ち合わせ中ファイル/【薄井税理士事務所様】2601/",
+        "contracts": "_⭐️【クライアント】契約書、請求書、領収書/2601薄井税理士事務所様/"
+      }
+    },
+    {
+      "id": "kanjinbo",
+      "name": "閑人房",
+      "category": "クライアント",
+      "project": {
+        "type": "HP制作",
+        "status": "納品完了"
+      },
+      "billing": {
+        "amount": 33000,
+        "status": "入金済み"
+      },
+      "drive": {
+        "files": "_⭐️【クライアント】打ち合わせ中ファイル/【閑人房】date/",
+        "contracts": "_⭐️【クライアント】契約書、請求書、領収書/2507閑人房様/"
+      }
+    },
+    {
+      "id": "postpal",
+      "name": "Post Pal",
+      "category": "iOSアプリ",
+      "project": {
+        "number": "Pro-025",
+        "type": "SNS投稿生成アプリ",
+        "status": "v1.0.9 審査中",
+        "tech": "Swift, Gemini API",
+        "url": "https://apps.apple.com/jp/app/post-pal-ai%E3%81%A7sns%E6%8A%95%E7%A8%BF%E3%82%92%E8%87%AA%E5%8B%95%E4%BD%9C%E6%88%90/id6749898580"
+      },
+      "code": "/Users/runa/projects/PostPal/"
+    },
+    {
+      "id": "bento-planner-ios",
+      "name": "Bento Planner",
+      "category": "iOSアプリ",
+      "project": {
+        "number": "Pro-020",
+        "type": "お弁当献立アプリ",
+        "status": "公開中",
+        "url": "https://apps.apple.com/us/app/bento-planner/id6748500612"
+      }
+    },
+    {
+      "id": "kumo-chan",
+      "name": "癒しのクモちゃん",
+      "category": "iOSアプリ",
+      "project": {
+        "number": "Pro-021",
+        "type": "癒し系アプリ",
+        "status": "公開中",
+        "url": "https://apps.apple.com/us/app/%E7%99%92%E3%81%97%E3%81%AE%E3%82%AF%E3%83%A2%E3%81%A1%E3%82%83%E3%82%93/id6746834418"
+      }
+    },
+    {
+      "id": "bihada-ios",
+      "name": "美肌コンシェルジュ",
+      "category": "iOSアプリ",
+      "project": {
+        "number": "Pro-022",
+        "type": "スキンケアアドバイスアプリ",
+        "status": "公開中",
+        "url": "https://apps.apple.com/jp/app/%E7%BE%8E%E8%82%8C%E3%82%B3%E3%83%B3%E3%82%B7%E3%82%A7%E3%83%AB%E3%82%B8%E3%83%A5/id6749561640"
+      }
+    },
+    {
+      "id": "rice-ios",
+      "name": "日本の美味しい-お米ソムリエ-",
+      "category": "iOSアプリ",
+      "project": {
+        "number": "Pro-023",
+        "type": "お米情報アプリ",
+        "status": "公開中",
+        "url": "https://apps.apple.com/jp/app/%E6%97%A5%E6%9C%AC%E3%81%AE%E7%BE%8E%E5%91%B3%E3%81%97%E3%81%84-%E3%81%8A%E7%B1%B3%E3%82%BD%E3%83%A0%E3%83%AA%E3%82%A8/id6749472378"
+      }
+    },
+    {
+      "id": "rakusho-key",
+      "name": "落書Key",
+      "category": "iOSアプリ",
+      "project": {
+        "number": "Pro-024",
+        "type": "Macキーボードアプリ",
+        "status": "公開中",
+        "url": "https://apps.apple.com/jp/app/%E8%90%BD%E6%9B%B8key/id6749606946?mt=12"
+      }
+    },
+    {
+      "id": "sakutto-chugaku",
+      "name": "サクッと復習!中学生",
+      "category": "iOSアプリ",
+      "project": {
+        "number": "Pro-026",
+        "type": "学習アプリ",
+        "status": "公開中",
+        "url": "https://apps.apple.com/us/app/%E3%82%B5%E3%82%AF%E3%83%83%E3%81%A8%E5%BE%A9%E7%BF%92-%E4%B8%AD%E5%AD%A6%E7%94%9F/id6752938393"
+      }
+    },
+    {
+      "id": "fp3",
+      "name": "FP3級 Pocket",
+      "category": "iOSアプリ",
+      "project": {
+        "number": "Pro-027",
+        "type": "資格学習アプリ",
+        "status": "公開中",
+        "url": "https://apps.apple.com/app/fp3-pocket/id6753855233"
+      }
+    },
+    {
+      "id": "fp2",
+      "name": "FP2級ポケット",
+      "category": "iOSアプリ",
+      "project": {
+        "number": "Pro-028",
+        "type": "資格学習アプリ",
+        "status": "公開中",
+        "url": "https://apps.apple.com/app/fp2%E7%B4%9Apocket/id6753967720"
+      }
+    },
+    {
+      "id": "fp1",
+      "name": "FP1級ポケット",
+      "category": "iOSアプリ",
+      "project": {
+        "number": "Pro-029",
+        "type": "資格学習アプリ",
+        "status": "公開中",
+        "url": "https://apps.apple.com/app/fp1%E7%B4%9A-pocket/id6754008783"
+      }
+    },
+    {
+      "id": "takken",
+      "name": "どこでもTAKKEN",
+      "category": "iOSアプリ",
+      "project": {
+        "type": "宅建試験対策アプリ",
+        "status": "公開中",
+        "url": "https://apps.apple.com/us/app/%E3%81%A9%E3%81%93%E3%81%A7%E3%82%82takken/id6759184650"
+      }
+    },
+    {
+      "id": "it-passport",
+      "name": "ゼロから始めるITパスポート",
+      "category": "iOSアプリ",
+      "project": {
+        "number": "Pro-030",
+        "type": "資格学習アプリ",
+        "status": "公開中",
+        "url": "https://apps.apple.com/us/app/%E3%82%BC%E3%83%AD%E3%81%8B%E3%82%89%E5%A7%8B%E3%82%81%E3%82%8Bit%E3%83%91%E3%82%B9%E3%83%9D%E3%83%BC%E3%83%88/id6755469573"
+      }
+    },
+    {
+      "id": "meishikanri",
+      "name": "おてもと名刺帳",
+      "category": "Webアプリ",
+      "project": {
+        "number": "Pro-013",
+        "type": "名刺管理PWA",
+        "status": "本番稼働中",
+        "tech": "Next.js, Supabase, Vercel",
+        "url": "https://meishi.cocoroai.co.jp/"
+      },
+      "code": "/Users/runa/projects/meishikanri/"
+    },
+    {
+      "id": "cocoroai-hp",
+      "name": "ココロAI ホームページ",
+      "category": "Webアプリ",
+      "project": {
+        "number": "Pro-002",
+        "type": "自社HP",
+        "status": "稼働中",
+        "url": "https://www.cocoroai.co.jp/"
+      },
+      "code": "/Users/runa/projects/cocoroai-website/"
+    },
+    {
+      "id": "bento-web",
+      "name": "Bento Planner Web",
+      "category": "Webアプリ",
+      "project": {
+        "number": "Pro-007",
+        "type": "お弁当献立Webアプリ",
+        "status": "公開中",
+        "url": "https://bento.cocoroai.co.jp"
+      }
+    },
+    {
+      "id": "bihada-web",
+      "name": "美肌コンシェルジュ Web",
+      "category": "Webアプリ",
+      "project": {
+        "number": "Pro-008",
+        "type": "スキンケアWebアプリ",
+        "status": "公開中",
+        "url": "https://bihadaconcierge.cocoroai.co.jp/"
+      }
+    },
+    {
+      "id": "fortune",
+      "name": "占い",
+      "category": "Webアプリ",
+      "project": {
+        "number": "Pro-009",
+        "type": "AI占いWebアプリ",
+        "status": "公開中",
+        "url": "https://fortune.cocoroai.co.jp/"
+      }
+    },
+    {
+      "id": "affirmation",
+      "name": "毎日のアファメーション",
+      "category": "Webアプリ",
+      "project": {
+        "number": "Pro-010",
+        "type": "アファメーション配信",
+        "status": "公開中",
+        "url": "https://affirmation.cocoroai.co.jp/"
+      }
+    },
+    {
+      "id": "rice-web",
+      "name": "日本の美味しい-お米ソムリエ- Web",
+      "category": "Webアプリ",
+      "project": {
+        "number": "Pro-011",
+        "type": "お米情報Webアプリ",
+        "status": "公開中",
+        "url": "https://rice.cocoroai.co.jp/"
+      }
+    },
+    {
+      "id": "kantan-chouhyo",
+      "name": "かんたん帳票",
+      "category": "Webアプリ",
+      "project": {
+        "number": "Pro-012",
+        "type": "帳票作成ツール",
+        "status": "公開中",
+        "url": "https://chouhyo.cocoroai.co.jp/"
+      }
+    },
+    {
+      "id": "co-time",
+      "name": "Co.Time",
+      "category": "Webアプリ",
+      "project": {
+        "number": "Pro-014",
+        "type": "スケジュール管理ツール",
+        "status": "公開中",
+        "url": "https://cotime.cocoroai.co.jp"
+      }
+    },
+    {
+      "id": "co-link",
+      "name": "Co.Link（問い合わせサイト）",
+      "category": "Webアプリ",
+      "project": {
+        "number": "Pro-016",
+        "type": "問い合わせフォーム",
+        "status": "公開中",
+        "url": "https://cocoroai-contact.map-cocoro.workers.dev/"
+      }
+    },
+    {
+      "id": "iyashi-nurse",
+      "name": "癒しの白衣ちゃん",
+      "category": "Webアプリ",
+      "project": {
+        "number": "Pro-017",
+        "type": "癒し系Webアプリ",
+        "status": "公開中",
+        "url": "https://iyashinurse.cocoroai.co.jp/"
+      }
+    },
+    {
+      "id": "iyashi-cone",
+      "name": "癒しの三角コーンちゃん",
+      "category": "Webアプリ",
+      "project": {
+        "number": "Pro-018",
+        "type": "癒し系Webアプリ",
+        "status": "公開中",
+        "url": "https://genba.cocoroai.co.jp/"
+      }
+    },
+    {
+      "id": "iyashi-chalk",
+      "name": "癒しのチョークちゃん",
+      "category": "Webアプリ",
+      "project": {
+        "number": "Pro-019",
+        "type": "癒し系Webアプリ",
+        "status": "公開中",
+        "url": "https://iyashiteacher.cocoroai.co.jp/"
+      }
+    },
+    {
+      "id": "line-cocoroai",
+      "name": "CocoroAI LINEミニアプリ",
+      "category": "LINEミニアプリ",
+      "project": {
+        "number": "Pro-003",
+        "type": "自社LINE公式",
+        "status": "公開中",
+        "url": "https://lin.ee/PIJfwYPT"
+      }
+    },
+    {
+      "id": "line-bistro",
+      "name": "Bistro COCORO（飲食店）",
+      "category": "LINEミニアプリ",
+      "project": {
+        "number": "Demo-008",
+        "type": "デモ - 飲食店",
+        "status": "公開中",
+        "url": "https://lin.ee/0uTCNO"
+      }
+    },
+    {
+      "id": "line-bakery",
+      "name": "ココロのパン屋さん",
+      "category": "LINEミニアプリ",
+      "project": {
+        "number": "Demo-009",
+        "type": "デモ - パン屋",
+        "status": "公開中",
+        "url": "https://lin.ee/1ROpaqK"
+      }
+    },
+    {
+      "id": "line-seikotsu",
+      "name": "こころ整骨院",
+      "category": "LINEミニアプリ",
+      "project": {
+        "number": "Demo-010",
+        "type": "デモ - 整骨院",
+        "status": "公開中",
+        "url": "https://lin.ee/IytqfID"
+      }
+    },
+    {
+      "id": "line-tax",
+      "name": "こころ税務サポート（士業）",
+      "category": "LINEミニアプリ",
+      "project": {
+        "number": "Demo-011",
+        "type": "デモ - 士業",
+        "status": "公開中",
+        "url": "https://lin.ee/yEXxvxWw"
+      }
+    },
+    {
+      "id": "line-golf",
+      "name": "ゴルフスクール（Webhook）",
+      "category": "LINEミニアプリ",
+      "project": {
+        "number": "Demo-012",
+        "type": "デモ - スクール",
+        "status": "公開中",
+        "url": "https://lin.ee/vXrHP0V"
+      }
+    },
+    {
+      "id": "line-farm",
+      "name": "Farm COCORO（農場）",
+      "category": "LINEミニアプリ",
+      "project": {
+        "number": "Demo-013",
+        "type": "デモ - 農場",
+        "status": "公開中",
+        "url": "https://lin.ee/ZszGw2j"
+      }
+    },
+    {
+      "id": "line-wear",
+      "name": "COCOROwear（アパレル）",
+      "category": "LINEミニアプリ",
+      "project": {
+        "number": "Demo-014",
+        "type": "デモ - アパレル",
+        "status": "公開中",
+        "url": "https://lin.ee/9CmG1Tq"
+      }
+    },
+    {
+      "id": "demo-salon",
+      "name": "エステサロン用テンプレート",
+      "category": "デモサイト",
+      "project": {
+        "number": "Demo-001",
+        "type": "HPデモ",
+        "status": "公開中",
+        "url": "https://www.cocoroai.co.jp/samples/beauty-salon-template.html"
+      }
+    },
+    {
+      "id": "demo-office",
+      "name": "士業事務所向けテンプレート",
+      "category": "デモサイト",
+      "project": {
+        "number": "Demo-002",
+        "type": "HPデモ",
+        "status": "公開中",
+        "url": "https://cocoroai.github.io/profession-office-template/"
+      }
+    },
+    {
+      "id": "demo-pet",
+      "name": "ペットサロン向けテンプレート",
+      "category": "デモサイト",
+      "project": {
+        "number": "Demo-003",
+        "type": "HPデモ",
+        "status": "公開中",
+        "url": "https://cocoroai.github.io/pet-salon-website/"
+      }
+    },
+    {
+      "id": "demo-clinic",
+      "name": "クリニック向けテンプレート",
+      "category": "デモサイト",
+      "project": {
+        "number": "Demo-004",
+        "type": "HPデモ",
+        "status": "公開中",
+        "url": "https://cocoroai.github.io/clinic-website-template/"
+      }
+    },
+    {
+      "id": "demo-kensetsu",
+      "name": "建設業向け見積もりアプリ「その場で見積もり-現場帳」",
+      "category": "デモサイト",
+      "project": {
+        "number": "Demo-005",
+        "type": "Webアプリデモ",
+        "status": "公開中",
+        "url": "https://kensetsu-estimate-app.vercel.app"
+      }
+    },
+    {
+      "id": "demo-golf-hp",
+      "name": "ゴルフスクールHP（Webhook）",
+      "category": "デモサイト",
+      "project": {
+        "number": "Demo-006",
+        "type": "HPデモ + CMS",
+        "status": "公開中",
+        "url": "https://golf-hp.vercel.app/"
+      }
+    },
+    {
+      "id": "demo-bakery-hp",
+      "name": "森のパン工房（Micro CMS）",
+      "category": "デモサイト",
+      "project": {
+        "number": "Demo-007",
+        "type": "HPデモ + CMS",
+        "status": "公開中",
+        "url": "https://panya-hp-hsfr.vercel.app/"
+      }
+    },
+    {
+      "id": "lp-samples",
+      "name": "LPサンプル集",
+      "category": "デモサイト",
+      "project": {
+        "number": "Pro-005",
+        "type": "LP集",
+        "status": "公開中",
+        "url": "https://mapcocoro.github.io/LPsample/"
+      }
+    },
+    {
+      "id": "kindle-web-bible",
+      "name": "2026年のWeb制作バイブル",
+      "category": "書籍",
+      "project": {
+        "type": "Kindle出版",
+        "status": "公開中",
+        "url": "https://www.amazon.co.jp/dp/B0GJ5S7CC1/"
+      }
+    },
+    {
+      "id": "kindle-ai-wand",
+      "name": "AIは魔法の杖",
+      "category": "書籍",
+      "project": {
+        "type": "Kindle出版",
+        "status": "公開中",
+        "url": "https://www.amazon.co.jp/dp/B0GHZVBNKR/"
+      }
+    },
+    {
+      "id": "kindle-first-ai",
+      "name": "はじめてのAI、はじめてのChatGPT",
+      "category": "書籍",
+      "project": {
+        "type": "Kindle出版",
+        "status": "公開中",
+        "url": "https://www.amazon.co.jp/dp/B0GJT89VHV/"
+      }
+    },
+    {
+      "id": "yt-mapcocoro",
+      "name": "好奇心の地図 Map of Curiosity",
+      "category": "YouTube",
+      "project": {
+        "number": "Pro-032",
+        "type": "YouTubeチャンネル",
+        "status": "運営中",
+        "url": "https://www.youtube.com/@mapcocoro"
+      }
+    },
+    {
+      "id": "yt-global",
+      "name": "mapcocoro.global",
+      "category": "YouTube",
+      "project": {
+        "number": "Pro-033",
+        "type": "YouTubeチャンネル",
+        "status": "運営中",
+        "url": "https://www.youtube.com/@mapcocoro.global"
+      }
+    },
+    {
+      "id": "yt-tinytails",
+      "name": "TinyTailsmap",
+      "category": "YouTube",
+      "project": {
+        "number": "Pro-034",
+        "type": "YouTubeチャンネル",
+        "status": "運営中",
+        "url": "https://www.youtube.com/@TinyTailsmap"
+      }
+    },
+    {
+      "id": "cocoro-chat",
+      "name": "ここロボちゃん チャットウィジェット",
+      "category": "社内ツール",
+      "project": {
+        "type": "チャットBot（自社HP埋め込み）",
+        "status": "稼働中",
+        "tech": "Cloudflare Workers, Gemini API",
+        "url": "https://cocoroai-website.vercel.app"
+      },
+      "code": "/Users/runa/projects/※Tool/cocoro-chat-api/"
+    },
+    {
+      "id": "cocoroai-x",
+      "name": "ココロボちゃん X自動投稿",
+      "category": "社内ツール",
+      "project": {
+        "type": "X自動投稿Bot",
+        "status": "停止中（アカウント凍結）",
+        "tech": "GAS, X API, Gemini"
+      }
+    },
+    {
+      "id": "cocoroboard",
+      "name": "CocoroBoard",
+      "category": "社内ツール",
+      "project": {
+        "type": "業務管理ダッシュボード",
+        "status": "稼働中",
+        "tech": "React, Vite, Tailwind",
+        "url": "https://mapcocoro.github.io/CocoroBoard/"
+      },
+      "code": "/Users/runa/projects/※Tool/CocoroBoard/"
+    },
+    {
+      "id": "hp-hearing",
+      "name": "HPヒアリングシート",
+      "category": "社内ツール",
+      "project": {
+        "number": "Pro-004",
+        "type": "Google Forms",
+        "status": "稼働中",
+        "url": "https://forms.gle/AFjNTkEes9qriqz8A"
+      }
+    },
+    {
+      "id": "line-demo-deck",
+      "name": "LINEミニアプリデモ資料",
+      "category": "社内ツール",
+      "project": {
+        "number": "Pro-006",
+        "type": "プレゼン資料",
+        "status": "完了",
+        "url": "https://docs.google.com/presentation/d/1-tvr3OualpCov5Wsoj_4IPQaARnqbqDCEMOQ2BfM1p0/"
+      }
+    }
+  ]
+}
